@@ -1,0 +1,24 @@
+{
+  "name": "Chickenhan_backend",
+  "version": "1.0.0",
+  "scripts": {
+    "watch": "tsc -b --watch",
+    "start": "nodemon -r dotenv/config dist/index.js"
+  },
+  "dependencies": {
+    "@types/pg": "^7.14.4",
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "pg": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.0",
+    "@types/express": "^4.17.7",
+    "nodemon": "^2.0.4",
+    "typescript": "^3.9.7"
+  },
+  "repository": "https://github.com/reginPekin/Chickenhan_backend.git",
+  "author": "reginPekin <reginbegin@gmail.com>",
+  "license": "MIT"
+}

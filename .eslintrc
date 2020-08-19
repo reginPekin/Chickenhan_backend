@@ -1,0 +1,41 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react", "react-hooks", "promise"],
+  "extends": [
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier/@typescript-eslint",
+    "plugin:promise/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "rules": {
+    "promise/prefer-await-to-then": "error",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-alert": "warn",
+    "no-console": "warn",
+    "no-return-await": "error",
+    "no-useless-return": "error",
+    "no-bitwise": "warn",
+    "no-lonely-if": "warn",
+    "no-shadow": "error",
+    "@typescript-eslint/camelcase": 0,
+    "prettier/prettier": ["error", {
+      "endOfLine":"auto"
+    }] // решает проблему с ошибкой Delete `␍` eslint
+  },
+  "overrides": [
+    {
+      "files": ["**/*.tsx"],
+      "rules": {
+        "react/prop-types": "off",
+        "react/display-name": "off"
+      }
+    }
+  ]
+}

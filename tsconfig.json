@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+  
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "target": "es5",
+    "lib": ["es2017"],
+    "composite": true,
+  },
+  "exclude": ["node_modules", "dist"],
+}
