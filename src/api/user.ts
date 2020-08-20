@@ -4,7 +4,7 @@ import * as lib from '../lib/user';
 
 export async function getUser(server: Server) {
   try {
-    const user = await lib.getUserByName(server.params.name);
+    const user = await lib.getUserById(server.params.id);
 
     server.respond(user);
   } catch (error) {
@@ -13,16 +13,21 @@ export async function getUser(server: Server) {
 }
 
 export async function addUser(server: Server) {
-  const user = lib.addUser(server.body as any);
+  try {
+    const user = lib.addUser(server.body as any);
 
-  server.respond(user);
+    server.respond(user);
+  } catch (error) {
+    server.respondError(error);
+  }
 }
 
 export async function updateUser(server: Server) {
-  const user = lib.updateUserByAge({
-    name: server.params.name,
-    age: server.params.age,
-  });
+  try {
+    const user = lib.updateUser(server.params.id, server.body);
 
-  server.respond(user);
+    server.respond(user);
+  } catch (error) {
+    server.respondError(error);
+  }
 }
