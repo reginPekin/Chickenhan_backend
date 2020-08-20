@@ -1,12 +1,27 @@
 import { Client } from 'pg';
 import { query } from 'express';
 import { User } from '../lib/user';
+import { AuthFacebook, AuthGoogle, AuthMail } from '../lib/auth';
 
-export type PostgresTable = 'users' | 'chats';
+export type PostgresTable = 'users' | 'authGoogle' | 'authFacebook' | 'authMail'
 
-export type DBRequestUpdate = ['users', Partial<User>, Partial<User>];
-export type DBRequestGet = ['users', Partial<User>];
-export type DBRequestAdd = ['users', User];
+export type DBRequestUpdate =
+  | ['users', Partial<User>, Partial<User>]
+  | ['authFacebook', Partial<AuthFacebook>, Partial<AuthFacebook>]
+  | ['authGoogle', Partial<AuthGoogle>, Partial<AuthGoogle>]
+  | ['authMail', Partial<AuthMail>, Partial<AuthMail>];
+
+export type DBRequestGet =
+  | ['users', Partial<User>]
+  | ['authGoogle', Partial<AuthGoogle>]
+  | ['authFacebook', Partial<AuthFacebook>]
+  | ['authMail', Partial<AuthMail>];
+
+export type DBRequestAdd =
+  | ['users', User]
+  | ['authGoogle', Partial<AuthGoogle>]
+  | ['authFacebook', Partial<AuthFacebook>]
+  | ['authMail', Partial<AuthMail]
 
 const client = new Client({
   user: process.env.POSTGRES_USER,
@@ -17,7 +32,9 @@ const client = new Client({
 
 export async function initPostgres() {
   // connect to db
+  console.log('[postgre] поднимается');
   await client.connect();
+  console.log('[postgre] поднялся');
 }
 
 // подготовить dbGET, доставать и менять user

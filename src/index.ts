@@ -9,6 +9,11 @@ import { API_PORT } from './config';
 import { initPostgres } from './utils/db';
 
 import { getUser, addUser, updateUser } from './api/user';
+import {
+  authUserByFacebook,
+  authUserByGoogle,
+  authUserByMail,
+} from './api/auth';
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -20,6 +25,10 @@ get('/ping', server => server.respond('Pong'));
 get('/user', getUser);
 post('/user', addUser);
 patch('/user', updateUser);
+
+post('/auth', authUserByFacebook);
+post('/auth', authUserByGoogle);
+post('/auth', authUserByMail);
 
 initPostgres();
 
