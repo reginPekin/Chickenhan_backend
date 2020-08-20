@@ -1,7 +1,7 @@
 import { dbAdd, dbGet } from '../utils/db';
 import { ErrorNotFound, ChickenhanError } from '../utils/error';
 
-import { getUserById, User } from './user';
+import { getUserById, User, addUser } from './user';
 
 export type RegMethod = 'google' | 'facebook' | 'mail';
 
@@ -66,11 +66,25 @@ export async function getUserByFacebookToken(
   return user;
 }
 
-async function getMailUserId(login: string): Promise<string> {
+async function getMailUserId(login: string): Promise<AuthMail> {
   const authInfo = await dbGet<AuthMail>('authMail', { login });
-  const password = authInfo?.password;
 
-  if (!password) {
+  if (!authInfo) {
+    throw new ErrorNotFound('auth error not found');
+  }
+
+  return authInfo;
+}
+
+export async function getUserByMailParams(
+  password: string,
+  login: string,
+): Promise<User> {
+  const authInfo = await getMailUserId(login);
+  const dbPassword = authInfo?.password;
+  console.log(1);
+
+  if (dbPassword && password !== dbPassword) {
     throw new ChickenhanError(
       401,
       'Wrong password',
@@ -78,21 +92,31 @@ async function getMailUserId(login: string): Promise<string> {
     );
   }
 
+  // authInfo  { userid: 2, password: 'zeleniybober', login: 'bober' }
+  console.log(authInfo.userId, 'auth info');
   const userId = authInfo?.userId;
 
   if (!userId) {
     throw new ErrorNotFound('userId error not found');
   }
-  return userId;
-}
-
-export async function getUserByMailParams(login: string): Promise<User> {
-  const userId = await getMailUserId(login);
+  console.log(3);
   const user = await getUserById(userId);
 
   if (!user) {
     throw new ErrorNotFound('user error not found');
   }
-
+  console.log(4);
   return user;
+}
+
+export async function signUpUserByMail(password: string, login: string) {
+  const newUser = await addUser(login);
+
+  if (!newUser.id) {
+    throw new ErrorNotFound('user error not found');
+  }
+
+  dbAdd('authMail', { password, login, userId: newUser.id });
+
+  return newUser;
 }
