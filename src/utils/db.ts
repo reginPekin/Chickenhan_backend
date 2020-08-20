@@ -1,9 +1,13 @@
 import { Client } from 'pg';
-import { query } from 'express';
-import { User } from '../lib/user';
+import { UserManual, User } from '../lib/user';
 import { AuthFacebook, AuthGoogle, AuthMail } from '../lib/auth';
+import { ChickenhanError } from './error';
 
-export type PostgresTable = 'users' | 'authGoogle' | 'authFacebook' | 'authMail'
+export type PostgresTable =
+  | 'users'
+  | 'authGoogle'
+  | 'authFacebook'
+  | 'authMail';
 
 export type DBRequestUpdate =
   | ['users', Partial<User>, Partial<User>]
@@ -18,10 +22,10 @@ export type DBRequestGet =
   | ['authMail', Partial<AuthMail>];
 
 export type DBRequestAdd =
-  | ['users', User]
+  | ['users', UserManual]
   | ['authGoogle', Partial<AuthGoogle>]
   | ['authFacebook', Partial<AuthFacebook>]
-  | ['authMail', Partial<AuthMail]
+  | ['authMail', Partial<AuthMail>];
 
 const client = new Client({
   user: process.env.POSTGRES_USER,
@@ -58,7 +62,7 @@ export async function dbGet<T>(
   return result.rows[0];
 }
 
-export async function dbAdd(...[table, data]: DBRequestAdd) {
+export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
   // затестить и для массивов
   const fields = Object.keys(data);
   const values = Object.values(data);
@@ -66,9 +70,14 @@ export async function dbAdd(...[table, data]: DBRequestAdd) {
 
   const query = `INSERT INTO ${table} (${fields.join(
     ', ',
-  )}) VALUES (${bracketValues.join(', ')});`;
+  )}) VALUES (${bracketValues.join(', ')}) RETURNING *;`;
 
-  return client.query(query);
+  const result = await client.query(query);
+
+  if (result.rows.length <= 0)
+    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+
+  return result.rows[0];
 }
 
 export async function dbUpdate(...[table, data, params]: DBRequestUpdate) {
