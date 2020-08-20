@@ -10,7 +10,7 @@ export interface Server {
   respondError: (error: ChickenhanError) => void;
 
   params: { [key: string]: any };
-  headers: IncomingHttpHeaders;
+  headers: IncomingHttpHeaders & { token: string };
   body: Object;
 }
 
@@ -21,7 +21,7 @@ export function parseToServer(
   const server: Server = {
     params: request.query,
     body: request.body as Object,
-    headers: request.headers,
+    headers: request.headers as any,
 
     respond: body => response.json(body),
     respondOk: () => response.json({ ok: true }),
