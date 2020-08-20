@@ -1,5 +1,5 @@
 import { dbAdd, dbGet } from '../utils/db';
-import { ErrorNotFound } from '../utils/error';
+import { ErrorNotFound, ChickenhanError } from '../utils/error';
 
 import { getUserById, User } from './user';
 
@@ -66,8 +66,18 @@ export async function getUserByFacebookToken(
   return user;
 }
 
-async function getMailUserId(password: string, login: string): Promise<string> {
-  const authInfo = await dbGet<AuthMail>('authMail', { login, password });
+async function getMailUserId(login: string): Promise<string> {
+  const authInfo = await dbGet<AuthMail>('authMail', { login });
+  const password = authInfo?.password;
+
+  if (!password) {
+    throw new ChickenhanError(
+      401,
+      'Wrong password',
+      'Wrong password, but login exists',
+    );
+  }
+
   const userId = authInfo?.userId;
 
   if (!userId) {
@@ -76,11 +86,8 @@ async function getMailUserId(password: string, login: string): Promise<string> {
   return userId;
 }
 
-export async function getUserByMailParams(
-  password: string,
-  login: string,
-): Promise<User> {
-  const userId = await getMailUserId(password, login);
+export async function getUserByMailParams(login: string): Promise<User> {
+  const userId = await getMailUserId(login);
   const user = await getUserById(userId);
 
   if (!user) {

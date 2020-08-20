@@ -46,9 +46,9 @@ export async function authUserByFacebook(server: Server) {
 }
 
 export async function authUserByMail(server: Server) {
-  const body: { password: string; login: string } = server.body as any;
+  const body: { login: string } = server.body as any;
 
-  if (!body.hasOwnProperty('password') && !body.hasOwnProperty('login')) {
+  if (!body.hasOwnProperty('login')) {
     server.respondError(
       new ChickenhanError(
         400,
@@ -60,7 +60,7 @@ export async function authUserByMail(server: Server) {
   }
 
   try {
-    const user = await lib.getUserByMailParams(body.password, body.login);
+    const user = await lib.getUserByMailParams(body.login);
 
     server.respond(user);
   } catch (error) {
