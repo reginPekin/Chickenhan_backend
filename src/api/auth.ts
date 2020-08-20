@@ -75,7 +75,7 @@ export async function signUpUserByMail(server: Server) {
       new ChickenhanError(
         400,
         'Wrong body',
-        'There are no needed password and login',
+        'There are no needed password or login',
       ),
     );
     return;
@@ -83,6 +83,52 @@ export async function signUpUserByMail(server: Server) {
 
   try {
     const user = await lib.signUpUserByMail(body.password, body.login);
+
+    server.respond(user);
+  } catch (error) {
+    server.respondError(error);
+  }
+}
+
+export async function signUpUserByGoogle(server: Server) {
+  const body: { token: string; login: string } = server.body as any;
+
+  if (!body.hasOwnProperty('token') && !body.hasOwnProperty('login')) {
+    server.respondError(
+      new ChickenhanError(
+        400,
+        'Wrong body',
+        'There are no needed googleToken or login',
+      ),
+    );
+    return;
+  }
+
+  try {
+    const user = await lib.signUpUserByGoogle(body.token, body.login);
+
+    server.respond(user);
+  } catch (error) {
+    server.respondError(error);
+  }
+}
+
+export async function signUpUserByFacebook(server: Server) {
+  const body: { token: string; login: string } = server.body as any;
+
+  if (!body.hasOwnProperty('token') && !body.hasOwnProperty('login')) {
+    server.respondError(
+      new ChickenhanError(
+        400,
+        'Wrong body',
+        'There are no needed facebookToken or login',
+      ),
+    );
+    return;
+  }
+
+  try {
+    const user = await lib.signUpUserByFacebook(body.token, body.login);
 
     server.respond(user);
   } catch (error) {

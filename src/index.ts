@@ -15,6 +15,8 @@ import {
   authUserByGoogle,
   authUserByMail,
   signUpUserByMail,
+  signUpUserByGoogle,
+  signUpUserByFacebook,
 } from './api/auth';
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -33,6 +35,8 @@ post('/auth/google', authUserByGoogle);
 post('/auth/mail', authUserByMail);
 
 post('/auth/new/mail', signUpUserByMail);
+post('/auth/new/google', signUpUserByGoogle);
+post('/auth/new/facebook', signUpUserByFacebook);
 
 initPostgres();
 

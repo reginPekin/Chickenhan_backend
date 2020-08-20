@@ -91,7 +91,6 @@ export async function getUserByMailParams(
     );
   }
 
-  // authInfo  { userid: 2, password: 'zeleniybober', login: 'bober' }
   const user_id = authInfo?.user_id;
 
   if (!user_id) {
@@ -114,6 +113,35 @@ export async function signUpUserByMail(password: string, login: string) {
   }
 
   dbAdd('authMail', { password, login, user_id: newUser.id });
+
+  return newUser;
+}
+
+export async function signUpUserByFacebook(
+  facebookToken: string,
+  login: string,
+) {
+  const newUser = await addUser(login);
+
+  if (!newUser.id) {
+    throw new ErrorNotFound('user error not found');
+  }
+
+  const user_id = newUser.id;
+  dbAdd('authFacebook', { facebookToken, user_id });
+
+  return newUser;
+}
+
+export async function signUpUserByGoogle(googleToken: string, login: string) {
+  const newUser = await addUser(login);
+
+  if (!newUser.id) {
+    throw new ErrorNotFound('user error not found');
+  }
+
+  const user_id = newUser.id;
+  dbAdd('authGoogle', { googleToken, user_id });
 
   return newUser;
 }
