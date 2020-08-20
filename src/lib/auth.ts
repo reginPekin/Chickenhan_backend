@@ -6,35 +6,35 @@ import { getUserById, User, addUser } from './user';
 export type RegMethod = 'google' | 'facebook' | 'mail';
 
 export interface AuthGoogle {
-  userId: string;
+  user_id: string;
   googleToken: string;
 }
 
 export interface AuthFacebook {
-  userId: string;
+  user_id: string;
   facebookToken: string;
 }
 
 export interface AuthMail {
-  userId: string;
+  user_id: string;
   password: string;
   login: string;
 }
 
 async function getGoogleUserId(googleToken: string): Promise<string> {
   const authInfo = await dbGet<AuthGoogle>('authGoogle', { googleToken });
-  const userId = authInfo?.userId;
+  const user_id = authInfo?.user_id;
 
-  if (!userId) {
-    throw new ErrorNotFound('userId error not found');
+  if (!user_id) {
+    throw new ErrorNotFound('user_id error not found');
   }
 
-  return userId;
+  return user_id;
 }
 
 export async function getUserByGoogleToken(googleToken: string): Promise<User> {
-  const userId = await getGoogleUserId(googleToken);
-  const user = await getUserById(userId);
+  const user_id = await getGoogleUserId(googleToken);
+  const user = await getUserById(user_id);
 
   if (!user) {
     throw new ErrorNotFound('user error not found');
@@ -45,19 +45,19 @@ export async function getUserByGoogleToken(googleToken: string): Promise<User> {
 
 async function getFacebookUserId(facebookToken: string): Promise<string> {
   const authInfo = await dbGet<AuthFacebook>('authFacebook', { facebookToken });
-  const userId = authInfo?.userId;
+  const user_id = authInfo?.user_id;
 
-  if (!userId) {
-    throw new ErrorNotFound('userId error not found');
+  if (!user_id) {
+    throw new ErrorNotFound('user_id error not found');
   }
-  return userId;
+  return user_id;
 }
 
 export async function getUserByFacebookToken(
   facebookToken: string,
 ): Promise<User> {
-  const userId = await getFacebookUserId(facebookToken);
-  const user = await getUserById(userId);
+  const user_id = await getFacebookUserId(facebookToken);
+  const user = await getUserById(user_id);
 
   if (!user) {
     throw new ErrorNotFound('user error not found');
@@ -82,7 +82,6 @@ export async function getUserByMailParams(
 ): Promise<User> {
   const authInfo = await getMailUserId(login);
   const dbPassword = authInfo?.password;
-  console.log(1);
 
   if (dbPassword && password !== dbPassword) {
     throw new ChickenhanError(
@@ -93,19 +92,17 @@ export async function getUserByMailParams(
   }
 
   // authInfo  { userid: 2, password: 'zeleniybober', login: 'bober' }
-  console.log(authInfo.userId, 'auth info');
-  const userId = authInfo?.userId;
+  const user_id = authInfo?.user_id;
 
-  if (!userId) {
-    throw new ErrorNotFound('userId error not found');
+  if (!user_id) {
+    throw new ErrorNotFound('user_id error not found');
   }
-  console.log(3);
-  const user = await getUserById(userId);
+
+  const user = await getUserById(user_id);
 
   if (!user) {
     throw new ErrorNotFound('user error not found');
   }
-  console.log(4);
   return user;
 }
 
@@ -116,7 +113,7 @@ export async function signUpUserByMail(password: string, login: string) {
     throw new ErrorNotFound('user error not found');
   }
 
-  dbAdd('authMail', { password, login, userId: newUser.id });
+  dbAdd('authMail', { password, login, user_id: newUser.id });
 
   return newUser;
 }

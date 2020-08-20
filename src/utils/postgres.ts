@@ -18,17 +18,17 @@ async function createTables() {
     );`,
     `CREATE TABLE authGoogle
     (
-      userId SERIAL UNIQUE NOT NULL,
+      user_id SERIAL UNIQUE NOT NULL,
       googleToken VARCHAR(255) PRIMARY KEY NOT NULL
     );`,
     `CREATE TABLE authFacebook
     (
-      userId SERIAL UNIQUE NOT NULL,
+      user_id SERIAL UNIQUE NOT NULL,
       facebookToken VARCHAR(255) PRIMARY KEY NOT NULL
     );`,
     `CREATE TABLE authMail
     (
-      userId SERIAL UNIQUE NOT NULL,
+      user_id SERIAL UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
       login VARCHAR(32) PRIMARY KEY NOT NULL
     );`,
