@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 
-export async function createTables() {
+async function createTables() {
   const pool = new Pool({
     user: process.env.POSTGRES_USER,
     host: process.env.POSTGRES_HOST,
@@ -8,40 +8,37 @@ export async function createTables() {
     password: process.env.POSTGRES_PASSWORD,
   });
 
-  pool.query(
-    `CREATE TABLE users
-    (
+  const TABLES = [
+    `CREATE TABLE users (
       id SERIAL PRIMARY KEY NOT NULL,
       token VARCHAR(255) UNIQUE NOT NULL,
       login VARCHAR(32) UNIQUE NOT NULL,
       online BOOL,
-      avatar VARCHAR(255) NOT NULL,
-    )
-
-    CREATE TABLE google_auth
+      avatar VARCHAR(255) NOT NULL
+    );`,
+    `CREATE TABLE authGoogle
     (
       userId SERIAL UNIQUE NOT NULL,
-      googleToken VARCHAR(255) PRIMARY KEY NOT NULL,
-    )
-
-    CREATE TABLE _facebook_auth
+      googleToken VARCHAR(255) PRIMARY KEY NOT NULL
+    );`,
+    `CREATE TABLE authFacebook
     (
       userId SERIAL UNIQUE NOT NULL,
-      facebookToken VARCHAR(255) PRIMARY KEY NOT NULL,
-    )
-
-    CREATE TABLE mail_auth
+      facebookToken VARCHAR(255) PRIMARY KEY NOT NULL
+    );`,
+    `CREATE TABLE authMail
     (
       userId SERIAL UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
-      login VARCHAR(32) PRIMARY KEY NOT NULL,
+      login VARCHAR(32) PRIMARY KEY NOT NULL
     );`,
-  );
+  ];
 
-  // const client = await pool
-  //   .connect()
+  TABLES.map(async table => {
+    await pool.query(table);
+  });
 
-  //   .catch(err => {
-  //     console.log('pool .connect ->', err);
-  //   });
+  pool.end();
 }
+
+createTables();
