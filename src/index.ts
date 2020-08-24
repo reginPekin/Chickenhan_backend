@@ -8,7 +8,7 @@ import { API_PORT } from './config';
 
 import { initPostgres } from './utils/db';
 
-import { getUser, addUser, updateUser } from './api/user';
+import { getMe, getUser, updateUser, addUserByLogin } from './api/user';
 
 import {
   authUserByFacebook,
@@ -26,9 +26,10 @@ app.use(bodyParser.raw());
 get('/ping', server => server.respond('Pong'));
 
 // REST API
-get('/user', getUser);
-post('/user', addUser);
-patch('/user', updateUser);
+get('/users/me', getMe);
+get('/users', getUser);
+patch('/users', updateUser);
+post('/users/login', addUserByLogin);
 
 post('/auth/facebook', authUserByFacebook);
 post('/auth/google', authUserByGoogle);

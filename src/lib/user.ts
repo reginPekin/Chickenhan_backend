@@ -37,16 +37,22 @@ export async function getUserById(id: string): Promise<User> {
   return user;
 }
 
-export function addUser(login: string): Promise<User> {
-  const token = crypto.randomBytes(64).toString('hex');
+export async function getUserByToken(token: string): Promise<User> {
+  const user = await dbGet<User>('users', { token });
 
-  const avatar =
-    'https://avatars.mds.yandex.net/get-pdb/1778306/63bc56a1-0a99-4322-bc1f-08a6f3cf2bb3/s375';
+  if (!user) {
+    throw new ErrorNotFound('user error not found');
+  }
+  return user;
+}
+
+export function addUserByLogin(login: string): Promise<User> {
+  const token = crypto.randomBytes(64).toString('hex');
 
   const newUser = {
     token,
     login,
-    avatar,
+    avatar: '',
     online: false,
   };
 
@@ -54,5 +60,5 @@ export function addUser(login: string): Promise<User> {
 }
 
 export function updateUser(id: string, queries: Partial<User>) {
-  return dbUpdate('users', { id }, queries);
+  return dbUpdate('users', queries, { id });
 }

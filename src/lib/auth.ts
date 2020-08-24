@@ -1,7 +1,7 @@
 import { dbAdd, dbGet } from '../utils/db';
 import { ErrorNotFound, ChickenhanError } from '../utils/error';
 
-import { getUserById, User, addUser } from './user';
+import { getUserById, User, addUserByLogin } from './user';
 
 export type RegMethod = 'google' | 'facebook' | 'mail';
 
@@ -106,7 +106,7 @@ export async function getUserByMailParams(
 }
 
 export async function signUpUserByMail(password: string, login: string) {
-  const newUser = await addUser(login);
+  const newUser = await addUserByLogin(login);
 
   if (!newUser.id) {
     throw new ErrorNotFound('user error not found');
@@ -121,7 +121,7 @@ export async function signUpUserByFacebook(
   facebookToken: string,
   login: string,
 ) {
-  const newUser = await addUser(login);
+  const newUser = await addUserByLogin(login);
 
   if (!newUser.id) {
     throw new ErrorNotFound('user error not found');
@@ -134,7 +134,7 @@ export async function signUpUserByFacebook(
 }
 
 export async function signUpUserByGoogle(googleToken: string, login: string) {
-  const newUser = await addUser(login);
+  const newUser = await addUserByLogin(login);
 
   if (!newUser.id) {
     throw new ErrorNotFound('user error not found');
