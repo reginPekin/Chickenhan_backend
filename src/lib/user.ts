@@ -4,7 +4,7 @@ import { dbGet, dbAdd, dbUpdate } from '../utils/db';
 import { ErrorNotFound } from '../utils/error';
 
 export interface User {
-  readonly id: string;
+  readonly id: number;
   readonly token: string;
 
   login: string;
@@ -21,19 +21,25 @@ export interface UserManual {
 }
 
 export interface UserWrap {
-  readonly id: string;
+  readonly id: number;
 
   login: string;
   online: boolean;
   avatar: string;
 }
 
-export async function getUserById(id: string): Promise<User> {
+export async function getUserById(id: number): Promise<User> {
   const user = await dbGet<User>('users', { id });
 
   if (!user) {
     throw new ErrorNotFound('user error not found');
   }
+
+  // send default avatar url
+  if (!user?.avatar) {
+    user.avatar = 'https://i.ytimg.com/vi/fpRJNptYa_o/maxresdefault.jpg';
+  }
+
   return user;
 }
 
@@ -43,6 +49,12 @@ export async function getUserByToken(token: string): Promise<User> {
   if (!user) {
     throw new ErrorNotFound('user error not found');
   }
+
+  // send default avatar
+  if (user?.avatar) {
+    user.avatar = 'https://i.ytimg.com/vi/fpRJNptYa_o/maxresdefault.jpg';
+  }
+
   return user;
 }
 
@@ -59,6 +71,6 @@ export function addUserByLogin(login: string): Promise<User> {
   return dbAdd('users', newUser);
 }
 
-export function updateUser(id: string, queries: Partial<User>) {
+export function updateUser(id: number, queries: Partial<User>) {
   return dbUpdate('users', queries, { id });
 }
