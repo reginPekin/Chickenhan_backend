@@ -3,25 +3,25 @@ import { ErrorNotFound, ChickenhanError } from '../utils/error';
 
 import { getUserById, User, addUserByLogin } from './user';
 
-export type RegMethod = 'google' | 'facebook' | 'mail';
+export type RegMethod = 'google' | 'facebook' | 'login';
 
 export interface AuthGoogle {
-  user_id: string;
-  googleToken: string;
+  readonly user_id: number;
+  readonly googleToken: string;
 }
 
 export interface AuthFacebook {
-  user_id: string;
-  facebookToken: string;
+  readonly user_id: number;
+  readonly facebookToken: string;
 }
 
-export interface AuthMail {
-  user_id: string;
+export interface AuthLogin {
+  readonly user_id: number;
   password: string;
   login: string;
 }
 
-async function getGoogleUserId(googleToken: string): Promise<string> {
+async function getGoogleUserId(googleToken: string): Promise<number> {
   const authInfo = await dbGet<AuthGoogle>('authGoogle', { googleToken });
   const user_id = authInfo?.user_id;
 
@@ -43,7 +43,7 @@ export async function getUserByGoogleToken(googleToken: string): Promise<User> {
   return user;
 }
 
-async function getFacebookUserId(facebookToken: string): Promise<string> {
+async function getFacebookUserId(facebookToken: string): Promise<number> {
   const authInfo = await dbGet<AuthFacebook>('authFacebook', { facebookToken });
   const user_id = authInfo?.user_id;
 
@@ -66,8 +66,8 @@ export async function getUserByFacebookToken(
   return user;
 }
 
-async function getMailUserId(login: string): Promise<AuthMail> {
-  const authInfo = await dbGet<AuthMail>('authMail', { login });
+async function getMailUserId(login: string): Promise<AuthLogin> {
+  const authInfo = await dbGet<AuthLogin>('authLogin', { login });
 
   if (!authInfo) {
     throw new ErrorNotFound('auth error not found');
@@ -76,7 +76,7 @@ async function getMailUserId(login: string): Promise<AuthMail> {
   return authInfo;
 }
 
-export async function getUserByMailParams(
+export async function getUserByLoginParams(
   password: string,
   login: string,
 ): Promise<User> {
@@ -105,14 +105,24 @@ export async function getUserByMailParams(
   return user;
 }
 
-export async function signUpUserByMail(password: string, login: string) {
+export async function signUpUserByLogin(password: string, login: string) {
+  const existingUser = await dbGet<AuthLogin>('authLogin', { login });
+
+  if (existingUser?.user_id) {
+    throw new ChickenhanError(
+      409,
+      'Already exists',
+      'This login already exists',
+    );
+  }
+
   const newUser = await addUserByLogin(login);
 
   if (!newUser.id) {
     throw new ErrorNotFound('user error not found');
   }
 
-  dbAdd('authMail', { password, login, user_id: newUser.id });
+  dbAdd('authLogin', { password, login, user_id: newUser.id });
 
   return newUser;
 }
