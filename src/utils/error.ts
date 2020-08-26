@@ -19,3 +19,23 @@ export class ErrorNotFound extends ChickenhanError {
     this.desc = desc;
   }
 }
+
+export class ErrorWrongBody extends ChickenhanError {
+  constructor(desc: string) {
+    super(400, 'Wrong body', desc);
+
+    this.code = 400;
+    this.name = 'Wrong body';
+    this.desc = desc;
+  }
+}
+
+export class ErrorWrongQueryParams extends ChickenhanError {
+  constructor(desc: string) {
+    super(400, 'Wrong query params', desc);
+
+    this.code = 400;
+    this.name = 'Wrong query params';
+    this.desc = desc;
+  }
+}

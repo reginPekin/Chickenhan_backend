@@ -1,15 +1,14 @@
 import { Server } from '../utils/server';
 
 import * as lib from '../lib/user';
-import { ChickenhanError } from '../utils/error';
+import { ErrorWrongBody } from '../utils/error';
 
 export async function getMe(server: Server) {
   const body: { token: string } = server.body as any;
 
   if (!body.hasOwnProperty('token')) {
-    server.respondError(
-      new ChickenhanError(400, 'Wrong body', 'There is no needed user token'),
-    );
+    server.respondError(new ErrorWrongBody('There is no needed user token'));
+
     return;
   }
 
@@ -36,9 +35,8 @@ export async function addUserByLogin(server: Server) {
   const body: { login: string } = server.body as any;
 
   if (!body.hasOwnProperty('login')) {
-    server.respondError(
-      new ChickenhanError(400, 'Wrong body', 'There is no needed login'),
-    );
+    server.respondError(new ErrorWrongBody('There is no needed login'));
+
     return;
   }
 
