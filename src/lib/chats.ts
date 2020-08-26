@@ -51,7 +51,7 @@ export async function addChat({
 export async function updateChatById(
   chat_id: number,
   queries: Partial<Chat>,
-): Promise<any> {
+): Promise<Chat> {
   return dbUpdate('chats', queries, { chat_id });
 }
 

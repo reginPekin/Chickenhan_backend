@@ -71,6 +71,6 @@ export function addUserByLogin(login: string): Promise<User> {
   return dbAdd('users', newUser);
 }
 
-export function updateUser(id: number, queries: Partial<User>) {
+export function updateUser(id: number, queries: Partial<User>): Promise<User> {
   return dbUpdate('users', queries, { id });
 }
