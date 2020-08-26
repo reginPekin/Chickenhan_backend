@@ -1,31 +1,50 @@
 import { Client } from 'pg';
 import { UserManual, User } from '../lib/user';
-import { AuthFacebook, AuthGoogle, AuthMail } from '../lib/auth';
+import { AuthFacebook, AuthGoogle, AuthLogin } from '../lib/auth';
+import { Message } from '../lib/messages';
+import { Chat } from '../lib/chats';
+
 import { ChickenhanError } from './error';
 
 export type PostgresTable =
   | 'users'
   | 'authGoogle'
   | 'authFacebook'
-  | 'authMail';
+  | 'authLogin'
+  | 'messages'
+  | 'chats';
 
 export type DBRequestUpdate =
   | ['users', Partial<User>, Partial<User>]
   | ['authFacebook', Partial<AuthFacebook>, Partial<AuthFacebook>]
   | ['authGoogle', Partial<AuthGoogle>, Partial<AuthGoogle>]
-  | ['authMail', Partial<AuthMail>, Partial<AuthMail>];
+  | ['authLogin', Partial<AuthLogin>, Partial<AuthLogin>]
+  | ['messages', Partial<Message>, Partial<Message>]
+  | ['chats', Partial<Chat>, Partial<Chat>];
 
 export type DBRequestGet =
   | ['users', Partial<User>]
   | ['authGoogle', Partial<AuthGoogle>]
   | ['authFacebook', Partial<AuthFacebook>]
-  | ['authMail', Partial<AuthMail>];
+  | ['authLogin', Partial<AuthLogin>]
+  | ['messages', Partial<Message>]
+  | ['chats', Partial<Chat>];
 
 export type DBRequestAdd =
   | ['users', UserManual]
+  | ['authGoogle', AuthGoogle]
+  | ['authFacebook', AuthFacebook]
+  | ['authLogin', AuthLogin]
+  | ['messages', Omit<Message, 'message_id'>]
+  | ['chats', Omit<Chat, 'chat_id'>];
+
+export type DBRequestDelete =
+  | ['users', Partial<User>]
   | ['authGoogle', Partial<AuthGoogle>]
   | ['authFacebook', Partial<AuthFacebook>]
-  | ['authMail', Partial<AuthMail>];
+  | ['authLogin', Partial<AuthLogin>]
+  | ['messages', Partial<Message>]
+  | ['chats', Partial<Chat>];
 
 const client = new Client({
   user: process.env.POSTGRES_USER,
@@ -62,15 +81,33 @@ export async function dbGet<T>(
   return result.rows[0];
 }
 
+function converJsToSqlArrays(array: any[]): string {
+  return `{${array.map(element => element)}}`;
+}
+
 export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
   // затестить и для массивов
   const fields = Object.keys(data);
   const values = Object.values(data);
-  const bracketValues = values.map(value => `'${value}'`);
+  const bracketValues = values.map(value => {
+    console.log(
+      value,
+      'value',
+      typeof value === 'object',
+      value.length || value.length === 0,
+    );
+    if (!(typeof value === 'object' && (value.length || value.length === 0))) {
+      return `'${value}'`;
+    }
+
+    return `'${converJsToSqlArrays(value)}'`;
+  });
 
   const query = `INSERT INTO ${table} (${fields.join(
     ', ',
   )}) VALUES (${bracketValues.join(', ')}) RETURNING *;`;
+
+  console.log(query, 'query');
 
   const result = await client.query(query);
 
@@ -80,7 +117,9 @@ export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
   return result.rows[0];
 }
 
-export async function dbUpdate(...[table, data, params]: DBRequestUpdate) {
+export async function dbUpdate<T>(
+  ...[table, data, params]: DBRequestUpdate
+): Promise<T> {
   const dataKeys = Object.keys(data);
   const paramsKey = Object.keys(params);
 
@@ -100,7 +139,34 @@ export async function dbUpdate(...[table, data, params]: DBRequestUpdate) {
            ? `${param} = '${(params as any)[param]}'`
            : `${param} = ${(params as any)[param]}`
        }`,
-   )};`;
+   )} RETURNING *;`;
 
-  return client.query(query);
+  const result = await client.query(query);
+
+  if (result.rows.length <= 0)
+    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+
+  return result.rows[0];
+}
+
+export async function dbDelete<T>(
+  ...[table, queries]: DBRequestDelete
+): Promise<T> {
+  const keys = Object.keys(queries);
+
+  const query = `DELETE FROM ${table} WHERE ${keys.map(
+    (key: any, index) =>
+      `${
+        typeof (queries as any)[key] === 'string'
+          ? `${key} = '${(queries as any)[key]}'`
+          : `${key} = ${(queries as any)[key]}`
+      }${keys.length - 1 !== index ? ' AND' : ''}`,
+  )} RETURNING *;`;
+
+  const result = await client.query(query);
+
+  if (result.rows.length <= 0)
+    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+
+  return result.rows[0];
 }
