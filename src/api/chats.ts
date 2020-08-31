@@ -3,11 +3,26 @@ import { Server } from '../utils/server';
 import * as lib from '../lib/chats';
 import { ErrorWrongBody } from '../utils/error';
 
+type StringChatType = 'dialog' | 'public' | 'private';
+
+function setStringType(enumType: lib.ChatType): StringChatType {
+  switch (enumType) {
+    case lib.ChatType.private:
+      return 'private';
+    case lib.ChatType.dialog:
+      return 'dialog';
+    case lib.ChatType.public:
+      return 'public';
+  }
+}
+
 export async function getChatById(server: Server) {
   try {
-    const chat = await lib.getChatById(server.params.chat_id);
+    const chat = await lib.getChatById(parseInt(server.pathParams.chat_id));
 
-    server.respond(chat);
+    const stringType: StringChatType = setStringType(chat.type);
+
+    server.respond({ ...chat, type: stringType });
   } catch (error) {
     server.respondError(error);
   }
@@ -15,7 +30,7 @@ export async function getChatById(server: Server) {
 
 export async function addChat(server: Server) {
   const body: {
-    type: lib.ChatType;
+    type: StringChatType;
     name: string;
     avatar?: string;
   } = server.body as any;
@@ -28,17 +43,30 @@ export async function addChat(server: Server) {
     return;
   }
 
-  const opponent_id = body.type === 'dialog' ? server.params.opponent_id : 0;
+  function setType(): lib.ChatType {
+    switch (body.type) {
+      case 'private':
+        return lib.ChatType.private;
+      case 'dialog':
+        return lib.ChatType.dialog;
+      case 'public':
+        return lib.ChatType.public;
+    }
+  }
+
+  const opponent_id = parseInt(
+    body.type === 'dialog' ? server.pathParams.opponent_id : '0',
+  );
 
   try {
     const chat = await lib.addChat({
-      type: body.type,
+      type: setType(),
       name: body.name,
       avatar: body.avatar,
       opponent_id,
     });
 
-    server.respond(chat);
+    server.respond({ ...chat, type: body.type });
   } catch (error) {
     server.respondError(error);
   }
@@ -46,9 +74,14 @@ export async function addChat(server: Server) {
 
 export async function updateChatById(server: Server) {
   try {
-    const user = await lib.updateChatById(server.params.chat_id, server.body);
+    const chat = await lib.updateChatById(
+      parseInt(server.pathParams.chat_id),
+      server.body,
+    );
 
-    server.respond(user);
+    const stringType: StringChatType = setStringType(chat.type);
+
+    server.respond({ ...chat, type: stringType });
   } catch (error) {
     server.respondError(error);
   }

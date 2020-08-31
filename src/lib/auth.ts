@@ -7,12 +7,12 @@ export type RegMethod = 'google' | 'facebook' | 'login';
 
 export interface AuthGoogle {
   readonly user_id: number;
-  readonly googleToken: string;
+  readonly google_token: string;
 }
 
 export interface AuthFacebook {
   readonly user_id: number;
-  readonly facebookToken: string;
+  readonly facebook_token: string;
 }
 
 export interface AuthLogin {
@@ -21,8 +21,8 @@ export interface AuthLogin {
   login: string;
 }
 
-async function getGoogleUserId(googleToken: string): Promise<number> {
-  const authInfo = await dbGet<AuthGoogle>('authGoogle', { googleToken });
+async function getGoogleUserId(google_token: string): Promise<number> {
+  const authInfo = await dbGet<AuthGoogle>('auth_google', { google_token });
   const user_id = authInfo?.user_id;
 
   if (!user_id) {
@@ -32,8 +32,10 @@ async function getGoogleUserId(googleToken: string): Promise<number> {
   return user_id;
 }
 
-export async function getUserByGoogleToken(googleToken: string): Promise<User> {
-  const user_id = await getGoogleUserId(googleToken);
+export async function getUserByGoogleToken(
+  google_token: string,
+): Promise<User> {
+  const user_id = await getGoogleUserId(google_token);
   const user = await getUserById(user_id);
 
   if (!user) {
@@ -43,8 +45,10 @@ export async function getUserByGoogleToken(googleToken: string): Promise<User> {
   return user;
 }
 
-async function getFacebookUserId(facebookToken: string): Promise<number> {
-  const authInfo = await dbGet<AuthFacebook>('authFacebook', { facebookToken });
+async function getFacebookUserId(facebook_token: string): Promise<number> {
+  const authInfo = await dbGet<AuthFacebook>('auth_facebook', {
+    facebook_token,
+  });
   const user_id = authInfo?.user_id;
 
   if (!user_id) {
@@ -54,9 +58,9 @@ async function getFacebookUserId(facebookToken: string): Promise<number> {
 }
 
 export async function getUserByFacebookToken(
-  facebookToken: string,
+  facebook_token: string,
 ): Promise<User> {
-  const user_id = await getFacebookUserId(facebookToken);
+  const user_id = await getFacebookUserId(facebook_token);
   const user = await getUserById(user_id);
 
   if (!user) {
@@ -67,7 +71,7 @@ export async function getUserByFacebookToken(
 }
 
 async function getMailUserId(login: string): Promise<AuthLogin> {
-  const authInfo = await dbGet<AuthLogin>('authLogin', { login });
+  const authInfo = await dbGet<AuthLogin>('auth_login', { login });
 
   if (!authInfo) {
     throw new ErrorNotFound('auth error not found');
@@ -106,7 +110,7 @@ export async function getUserByLoginParams(
 }
 
 export async function signUpUserByLogin(password: string, login: string) {
-  const existingUser = await dbGet<AuthLogin>('authLogin', { login });
+  const existingUser = await dbGet<AuthLogin>('auth_login', { login });
 
   if (existingUser?.user_id) {
     throw new ChickenhanError(
@@ -122,13 +126,13 @@ export async function signUpUserByLogin(password: string, login: string) {
     throw new ErrorNotFound('user error not found');
   }
 
-  dbAdd('authLogin', { password, login, user_id: newUser.id });
+  dbAdd('auth_login', { password, login, user_id: newUser.id });
 
   return newUser;
 }
 
 export async function signUpUserByFacebook(
-  facebookToken: string,
+  facebook_token: string,
   login: string,
 ) {
   const newUser = await addUserByLogin(login);
@@ -138,12 +142,12 @@ export async function signUpUserByFacebook(
   }
 
   const user_id = newUser.id;
-  dbAdd('authFacebook', { facebookToken, user_id });
+  dbAdd('auth_facebook', { facebook_token, user_id });
 
   return newUser;
 }
 
-export async function signUpUserByGoogle(googleToken: string, login: string) {
+export async function signUpUserByGoogle(google_token: string, login: string) {
   const newUser = await addUserByLogin(login);
 
   if (!newUser.id) {
@@ -151,7 +155,7 @@ export async function signUpUserByGoogle(googleToken: string, login: string) {
   }
 
   const user_id = newUser.id;
-  dbAdd('authGoogle', { googleToken, user_id });
+  dbAdd('auth_google', { google_token, user_id });
 
   return newUser;
 }

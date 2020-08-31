@@ -4,14 +4,14 @@ import * as lib from '../lib/auth';
 import { ErrorWrongBody } from '../utils/error';
 
 export async function authUserByGoogle(server: Server) {
-  const body: { token: string } = server.body as any;
+  const body: { google_token: string } = server.body as any;
 
-  if (!body.hasOwnProperty('token')) {
-    server.respondError(new ErrorWrongBody('There is no needed googleToken'));
+  if (!body.hasOwnProperty('google_token')) {
+    server.respondError(new ErrorWrongBody('There is no needed google_token'));
   }
 
   try {
-    const user = await lib.getUserByGoogleToken(body.token);
+    const user = await lib.getUserByGoogleToken(body.google_token);
 
     server.respond(user);
   } catch (error) {
@@ -20,15 +20,17 @@ export async function authUserByGoogle(server: Server) {
 }
 
 export async function authUserByFacebook(server: Server) {
-  const body: { token: string } = server.body as any;
+  const body: { facebook_token: string } = server.body as any;
 
-  if (!body.hasOwnProperty('token')) {
-    server.respondError(new ErrorWrongBody('There is no needed facebookToken'));
+  if (!body.hasOwnProperty('facebook_token')) {
+    server.respondError(
+      new ErrorWrongBody('There is no needed facebook_token'),
+    );
     return;
   }
 
   try {
-    const user = await lib.getUserByFacebookToken(body.token);
+    const user = await lib.getUserByFacebookToken(body.facebook_token);
 
     server.respond(user);
   } catch (error) {
@@ -38,11 +40,9 @@ export async function authUserByFacebook(server: Server) {
 
 export async function authUserByLogin(server: Server) {
   const body: { password: string; login: string } = server.body as any;
-  console.log(body.password, body.login, 'login and password');
 
   // check for login and password
   if (!body.hasOwnProperty('password') || !body.hasOwnProperty('login')) {
-    console.log('чего-то не хвататет');
     server.respondError(
       new ErrorWrongBody('There are no needed password and login'),
     );
@@ -78,9 +78,9 @@ export async function signUpUserByLogin(server: Server) {
 }
 
 export async function signUpUserByGoogle(server: Server) {
-  const body: { token: string; login: string } = server.body as any;
+  const body: { google_token: string; login: string } = server.body as any;
 
-  if (!body.hasOwnProperty('token') && !body.hasOwnProperty('login')) {
+  if (!body.hasOwnProperty('google_token') && !body.hasOwnProperty('login')) {
     server.respondError(
       new ErrorWrongBody('There are no needed googlToken or login'),
     );
@@ -89,7 +89,7 @@ export async function signUpUserByGoogle(server: Server) {
   }
 
   try {
-    const user = await lib.signUpUserByGoogle(body.token, body.login);
+    const user = await lib.signUpUserByGoogle(body.google_token, body.login);
 
     server.respond(user);
   } catch (error) {
@@ -98,18 +98,21 @@ export async function signUpUserByGoogle(server: Server) {
 }
 
 export async function signUpUserByFacebook(server: Server) {
-  const body: { token: string; login: string } = server.body as any;
+  const body: { facebook_token: string; login: string } = server.body as any;
 
-  if (!body.hasOwnProperty('token') && !body.hasOwnProperty('login')) {
+  if (!body.hasOwnProperty('facebook_token') && !body.hasOwnProperty('login')) {
     server.respondError(
-      new ErrorWrongBody('There are no needed facebookToken or login'),
+      new ErrorWrongBody('There are no needed facebook_token or login'),
     );
 
     return;
   }
 
   try {
-    const user = await lib.signUpUserByFacebook(body.token, body.login);
+    const user = await lib.signUpUserByFacebook(
+      body.facebook_token,
+      body.login,
+    );
 
     server.respond(user);
   } catch (error) {

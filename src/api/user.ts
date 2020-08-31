@@ -1,19 +1,34 @@
 import { Server } from '../utils/server';
 
-import * as lib from '../lib/user';
 import { ErrorWrongBody } from '../utils/error';
 
-export async function getMe(server: Server) {
-  const body: { token: string } = server.body as any;
+import * as lib from '../lib/user';
 
-  if (!body.hasOwnProperty('token')) {
+export async function getMe(server: Server) {
+  if (!server.headers.hasOwnProperty('token')) {
     server.respondError(new ErrorWrongBody('There is no needed user token'));
 
     return;
   }
 
   try {
-    const user = await lib.getUserByToken(body.token);
+    const user = await lib.getUserByToken(server.headers.token);
+
+    server.respond(user);
+  } catch (error) {
+    server.respondError(error);
+  }
+}
+
+export async function updateMe(server: Server) {
+  if (!server.headers.hasOwnProperty('token')) {
+    server.respondError(new ErrorWrongBody('There is no needed user token'));
+
+    return;
+  }
+
+  try {
+    const user = await lib.updateUserByToken(server.headers.token, server.body);
 
     server.respond(user);
   } catch (error) {
@@ -23,7 +38,7 @@ export async function getMe(server: Server) {
 
 export async function getUser(server: Server) {
   try {
-    const user = await lib.getUserById(server.params.id);
+    const user = await lib.getUserById(parseInt(server.pathParams.id));
 
     server.respond(user);
   } catch (error) {
@@ -42,6 +57,7 @@ export async function addUserByLogin(server: Server) {
 
   try {
     const user = await lib.addUserByLogin(body.login);
+
     server.respond(user);
   } catch (error) {
     server.respondError(error);
@@ -50,7 +66,10 @@ export async function addUserByLogin(server: Server) {
 
 export async function updateUser(server: Server) {
   try {
-    const user = await lib.updateUser(server.params.id, server.body);
+    const user = await lib.updateUser(
+      parseInt(server.pathParams.id),
+      server.body,
+    );
 
     server.respond(user);
   } catch (error) {
