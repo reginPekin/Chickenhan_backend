@@ -9,7 +9,13 @@ import { API_PORT } from './config';
 
 import { initPostgres } from './utils/db';
 
-import { getMe, getUser, updateUser, addUserByLogin } from './api/user';
+import {
+  getMe,
+  getUser,
+  updateUser,
+  updateMe,
+  addUserByLogin,
+} from './api/user';
 import {
   authUserByFacebook,
   authUserByGoogle,
@@ -18,8 +24,21 @@ import {
   signUpUserByGoogle,
   signUpUserByFacebook,
 } from './api/auth';
-import { addMessage, getMessageById, deleteMessageById } from './api/messages';
+import {
+  addMessage,
+  getMessageById,
+  deleteMessageById,
+  getMessageList,
+  getMessages,
+} from './api/messages';
 import { addChat, updateChatById, getChatById } from './api/chats';
+import {
+  getChats as getUserChats,
+  addChat as addUserChat,
+  removeChat as removeUserChat,
+  countUsersWithChat,
+  getFullChats,
+} from './api/users_chats';
 
 app.use(cors());
 app.options('*', cors());
@@ -27,13 +46,16 @@ app.options('*', cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.raw());
+app.use(bodyParser({ limit: '10mb' }));
 
 get('/ping', server => server.respond('Pong'));
 
 // REST API
 get('/users/me', getMe);
-get('/users', getUser);
-patch('/users', updateUser);
+get('/users/me', updateMe);
+get('/users/:id', getUser);
+patch('/users/me', updateMe);
+patch('/users/:id', updateUser);
 post('/users/login', addUserByLogin);
 
 post('/auth/facebook', authUserByFacebook);
@@ -44,13 +66,21 @@ post('/auth/new/login', signUpUserByLogin);
 post('/auth/new/google', signUpUserByGoogle);
 post('/auth/new/facebook', signUpUserByFacebook);
 
-get(`/messages`, getMessageById);
-del(`/messages`, deleteMessageById);
+get(`/messages/:message_id`, getMessageById);
+get(`/messages/list/:chat_id`, getMessageList);
+get(`/messages/pagination/:chat_id`, getMessages);
+del(`/messages/:message_id`, deleteMessageById);
 post(`/messages/:chat_id`, addMessage);
 
-get('/chats', getChatById);
-post('/chats', addChat);
-patch('/chats', updateChatById);
+get('/chats/:chat_id', getChatById);
+patch('/chats/:chat_id', updateChatById);
+post('/chats/:opponent_id', addChat);
+
+get('/user-chats/full', getFullChats);
+get('/user-chats', getUserChats);
+patch('/user-chats/add/:chat_id', addUserChat);
+patch('/user-chats/remove/:chat_id', removeUserChat);
+patch('/user-chats/count/:chat_id', countUsersWithChat);
 
 initPostgres();
 
