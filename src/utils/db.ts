@@ -5,46 +5,70 @@ import { Message } from '../lib/messages';
 import { Chat } from '../lib/chats';
 
 import { ChickenhanError } from './error';
+import { UsersChats } from '../lib/users_chats';
+
+type Options = { count: number; sortBy: string };
+
+type OptionsPagination = { sortBy: string; count?: number; start_id?: number };
 
 export type PostgresTable =
   | 'users'
-  | 'authGoogle'
-  | 'authFacebook'
-  | 'authLogin'
+  | 'auth_google'
+  | 'auth_facebook'
+  | 'auth_login'
   | 'messages'
-  | 'chats';
+  | 'chats'
+  | 'users_chats';
 
 export type DBRequestUpdate =
   | ['users', Partial<User>, Partial<User>]
-  | ['authFacebook', Partial<AuthFacebook>, Partial<AuthFacebook>]
-  | ['authGoogle', Partial<AuthGoogle>, Partial<AuthGoogle>]
-  | ['authLogin', Partial<AuthLogin>, Partial<AuthLogin>]
+  | ['auth_facebook', Partial<AuthFacebook>, Partial<AuthFacebook>]
+  | ['auth_google', Partial<AuthGoogle>, Partial<AuthGoogle>]
+  | ['auth_login', Partial<AuthLogin>, Partial<AuthLogin>]
   | ['messages', Partial<Message>, Partial<Message>]
   | ['chats', Partial<Chat>, Partial<Chat>];
 
 export type DBRequestGet =
   | ['users', Partial<User>]
-  | ['authGoogle', Partial<AuthGoogle>]
-  | ['authFacebook', Partial<AuthFacebook>]
-  | ['authLogin', Partial<AuthLogin>]
+  | ['auth_google', Partial<AuthGoogle>]
+  | ['auth_facebook', Partial<AuthFacebook>]
+  | ['auth_login', Partial<AuthLogin>]
   | ['messages', Partial<Message>]
-  | ['chats', Partial<Chat>];
+  | ['chats', Partial<Chat>]
+  | ['users_chats', Partial<UsersChats>];
 
 export type DBRequestAdd =
   | ['users', UserManual]
-  | ['authGoogle', AuthGoogle]
-  | ['authFacebook', AuthFacebook]
-  | ['authLogin', AuthLogin]
+  | ['auth_google', AuthGoogle]
+  | ['auth_facebook', AuthFacebook]
+  | ['auth_login', AuthLogin]
   | ['messages', Omit<Message, 'message_id'>]
-  | ['chats', Omit<Chat, 'chat_id'>];
+  | ['chats', Omit<Chat, 'chat_id'>]
+  | ['users_chats', UsersChats];
 
 export type DBRequestDelete =
   | ['users', Partial<User>]
-  | ['authGoogle', Partial<AuthGoogle>]
-  | ['authFacebook', Partial<AuthFacebook>]
-  | ['authLogin', Partial<AuthLogin>]
+  | ['auth_google', Partial<AuthGoogle>]
+  | ['auth_facebook', Partial<AuthFacebook>]
+  | ['auth_login', Partial<AuthLogin>]
   | ['messages', Partial<Message>]
   | ['chats', Partial<Chat>];
+
+export type DBRequestAddArray = [
+  'users_chats',
+  { chats: number },
+  Partial<UsersChats>,
+];
+
+export type DBRequestCountArray = ['users_chats', { chats: number }];
+
+export type DBRequestList = ['messages', Partial<Message>, Partial<Options>];
+
+export type DBRequestListPagination = [
+  'messages',
+  Partial<Message>,
+  OptionsPagination,
+];
 
 const client = new Client({
   user: process.env.POSTGRES_USER,
@@ -90,12 +114,6 @@ export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
   const fields = Object.keys(data);
   const values = Object.values(data);
   const bracketValues = values.map(value => {
-    console.log(
-      value,
-      'value',
-      typeof value === 'object',
-      value.length || value.length === 0,
-    );
     if (!(typeof value === 'object' && (value.length || value.length === 0))) {
       return `'${value}'`;
     }
@@ -106,8 +124,6 @@ export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
   const query = `INSERT INTO ${table} (${fields.join(
     ', ',
   )}) VALUES (${bracketValues.join(', ')}) RETURNING *;`;
-
-  console.log(query, 'query');
 
   const result = await client.query(query);
 
@@ -169,4 +185,149 @@ export async function dbDelete<T>(
     throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
 
   return result.rows[0];
+}
+
+export async function dbAddToArray<T>(
+  ...[table, data, params]: DBRequestAddArray
+): Promise<T> {
+  const dataKeys = Object.keys(data);
+  const paramsKey = Object.keys(params);
+
+  const query = `UPDATE ${table}
+   SET ${dataKeys.map(
+     (key, index) =>
+       `${index ? ' ' : ''}${
+         typeof (data as any)[key] === 'string'
+           ? `${key} = ARRAY_APPEND(${key}, '${(data as any)[key]}')`
+           : `${key} = ARRAY_APPEND(${key}, ${(data as any)[key]})`
+       }`,
+   )}
+   WHERE ${paramsKey.map(
+     (param, index) =>
+       `${index ? ' ' : ''}${
+         typeof (params as any)[param] === 'string'
+           ? `${param} = '${(params as any)[param]}'`
+           : `${param} = ${(params as any)[param]}`
+       }`,
+   )} RETURNING *;`;
+
+  const result = await client.query(query);
+
+  if (result.rows.length <= 0)
+    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+
+  return result.rows[0];
+}
+
+export async function dbDeleteFromArray<T>(
+  ...[table, data, params]: DBRequestAddArray
+): Promise<T> {
+  const dataKeys = Object.keys(data);
+  const paramsKey = Object.keys(params);
+
+  const query = `UPDATE ${table}
+   SET ${dataKeys.map(
+     (key, index) =>
+       `${index ? ' ' : ''}${
+         typeof (data as any)[key] === 'string'
+           ? `${key} = ARRAY_REMOVE(${key}, '${(data as any)[key]}')`
+           : `${key} = ARRAY_REMOVE(${key}, ${(data as any)[key]})`
+       }`,
+   )}
+   WHERE ${paramsKey.map(
+     (param, index) =>
+       `${index ? ' ' : ''}${
+         typeof (params as any)[param] === 'string'
+           ? `${param} = '${(params as any)[param]}'`
+           : `${param} = ${(params as any)[param]}`
+       }`,
+   )} RETURNING *;`;
+
+  const result = await client.query(query);
+
+  if (result.rows.length <= 0)
+    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+
+  return result.rows[0];
+}
+
+export async function dbCountArray<T>(
+  ...[table, params]: DBRequestCountArray
+): Promise<T> {
+  const paramsKey = Object.keys(params);
+
+  const query = `SELECT COUNT (*) 
+    FROM ${table}
+    WHERE ${paramsKey.map(
+      (param, index) =>
+        `${index ? ' ' : ''}${
+          typeof (params as any)[param] === 'string'
+            ? `${param} @> '{"${(params as any)[param]}"}'`
+            : `${param} @> '{${(params as any)[param]}}'`
+        }`,
+    )};`;
+
+  const result = await client.query(query);
+
+  if (result.rows.length <= 0)
+    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+
+  return result.rows[0];
+}
+
+export async function dbList<T extends Array<any>>(
+  ...[table, queries, options]: DBRequestList
+): Promise<T> {
+  const defaultOptions = { count: 10, sortBy: 'message_id' };
+
+  const keys = Object.keys(queries);
+
+  const query = `SELECT * FROM ${table} WHERE ${keys.map(
+    (key: any, index) =>
+      `${
+        typeof (queries as any)[key] === 'string'
+          ? `${key} = '${(queries as any)[key]}'`
+          : `${key} = ${(queries as any)[key]}`
+      }${keys.length - 1 !== index ? ' AND' : ''}`,
+  )} ORDER BY ${options.sortBy || defaultOptions.sortBy} DESC LIMIT ${
+    options.count || defaultOptions.count
+  };`;
+
+  const result = await client.query(query);
+
+  return result.rows as T;
+}
+
+export async function dbListPagination<T extends Array<any>>(
+  ...[table, queries, options]: DBRequestListPagination
+): Promise<{ list: T; next_from_id?: number; hasMore: boolean }> {
+  const defaultOptions = { count: 10, start_id: undefined };
+
+  const keys = Object.keys(queries);
+  const count = options.count || defaultOptions.count;
+
+  const query = `SELECT * FROM ${table} WHERE ${keys.map(
+    (key: any, index) =>
+      `${
+        typeof (queries as any)[key] === 'string'
+          ? `${key} = '${(queries as any)[key]}'`
+          : `${key} = ${(queries as any)[key]}`
+      }`,
+  )} ${
+    options.start_id !== undefined
+      ? `AND ${options.sortBy} < ${options.start_id}`
+      : ``
+  } ORDER BY ${options.sortBy} DESC LIMIT ${count + 1};`;
+
+  const result = await client.query(query);
+
+  // если нет следующего элемента
+  if (count + 1 !== result.rowCount) {
+    return { list: result.rows as T, hasMore: false };
+  }
+
+  const next_from_id = result.rows[result.rowCount - 1][options.sortBy];
+  const list: T = result.rows.slice(0, count) as T;
+
+  return { list, next_from_id, hasMore: true };
 }
