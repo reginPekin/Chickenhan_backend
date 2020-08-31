@@ -16,17 +16,17 @@ async function createTables() {
       online BOOL,
       avatar VARCHAR(255) NOT NULL
     );`,
-    `CREATE TABLE authGoogle
+    `CREATE TABLE auth_google
     (
       user_id INTEGER UNIQUE NOT NULL,
-      googleToken VARCHAR(255) PRIMARY KEY NOT NULL
+      google_token VARCHAR(255) PRIMARY KEY NOT NULL
     );`,
-    `CREATE TABLE authFacebook
+    `CREATE TABLE auth_facebook
     (
       user_id INTEGER UNIQUE NOT NULL,
-      facebookToken VARCHAR(255) PRIMARY KEY NOT NULL
+      facebook_token VARCHAR(255) PRIMARY KEY NOT NULL
     );`,
-    `CREATE TABLE authLogin
+    `CREATE TABLE auth_login
     (
       user_id INTEGER UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
@@ -38,27 +38,23 @@ async function createTables() {
       author_id INTEGER NOT NULL,
       chat_id INTEGER NOT NULL,
       text TEXT,
-      date VARCHAR(32),
+      date DATE,
       pictures BIGINT[]
     );`,
     `CREATE TABLE chats
     (
-      chat_id BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
-      type VARCHAR(32) NOT NULL,
+      chat_id SERIAL PRIMARY KEY UNIQUE NOT NULL,
+      type SMALLINT NOT NULL,
       avatar VARCHAR(255) NOT NULL,
 
-      last_date_message VARCHAR(32),
-      last_message TEXT,
-
-      name VARCHAR(32) NOT NULL,
-      user_count INTEGER NOT NULL,
+      name VARCHAR(256) NOT NULL,
 
       opponent_id INTEGER
     );`,
-    `CREATE TABLE usersChats
+    `CREATE TABLE users_chats
     (
       user_id INTEGER PRIMARY KEY UNIQUE NOT NULL,
-      chats BIGSERIAL[]
+      chats INTEGER[]
     );`,
   ];
 
