@@ -6,7 +6,9 @@ import { ErrorWrongBody } from '../utils/error';
 
 export async function getMessageById(server: Server) {
   try {
-    const message = await lib.getMessageById(server.params.message_id);
+    const message = await lib.getMessageById(
+      BigInt(server.pathParams.message_id),
+    );
 
     server.respond(message);
   } catch (error) {
@@ -14,10 +16,44 @@ export async function getMessageById(server: Server) {
   }
 }
 
-export async function deleteMessageById(server: Server) {
-  console.log(1);
+export async function getMessageList(server: Server) {
   try {
-    const message = await lib.deleteMessageById(server.params.message_id);
+    const messageList = await lib.getMessageList(
+      parseInt(server.pathParams.chat_id),
+      4,
+    );
+
+    server.respond(messageList);
+  } catch (error) {
+    server.respondError(error);
+  }
+}
+
+export async function getMessages(server: Server) {
+  if (!server.pathParams.chat_id) {
+    server.respondError(
+      new ErrorWrongBody('There is ni needed chat_id inside path params'),
+    );
+  }
+
+  try {
+    const messageList = await lib.getListPagination(
+      parseInt(server.pathParams.chat_id),
+      parseInt(server.params.next_id) || undefined,
+      parseInt(server.params.count) || undefined,
+    );
+
+    server.respond(messageList);
+  } catch (error) {
+    server.respondError(error);
+  }
+}
+
+export async function deleteMessageById(server: Server) {
+  try {
+    const message = await lib.deleteMessageById(
+      BigInt(server.pathParams.message_id),
+    );
 
     server.respond(message);
   } catch (error) {
@@ -29,13 +65,9 @@ export async function addMessage(server: Server) {
   const body: {
     pictures?: string[];
     text?: string;
-    token: string;
   } = server.body as any;
 
-  if (
-    !body.hasOwnProperty('token') ||
-    (!body.hasOwnProperty('text') && !body.hasOwnProperty('pictures'))
-  ) {
+  if (!body.hasOwnProperty('text') && !body.hasOwnProperty('pictures')) {
     server.respondError(
       new ErrorWrongBody('There is no needed pictures or text'),
     );
@@ -44,7 +76,7 @@ export async function addMessage(server: Server) {
   }
 
   try {
-    const author = await getUserByToken(body.token);
+    const author = await getUserByToken(server.headers.token);
     const chat_id = parseInt(server.pathParams.chat_id);
 
     const message = await lib.addMessage({
@@ -55,7 +87,7 @@ export async function addMessage(server: Server) {
       pictures: body.pictures,
     });
 
-    server.respond(message);
+    server.respond({ ...message, author });
   } catch (error) {
     server.respondError(error);
   }

@@ -1,4 +1,4 @@
-import { dbGet, dbAdd, dbDelete } from '../utils/db';
+import { dbGet, dbAdd, dbDelete, dbList, dbListPagination } from '../utils/db';
 import { ErrorNotFound } from '../utils/error';
 
 export interface Message {
@@ -28,7 +28,6 @@ export async function addMessage({
 }: AddMessage): Promise<Message> {
   const date = new Date().toISOString();
 
-  console.log('дошёл');
   // кладу в бд с картинками с возвращением их id
 
   const message = {
@@ -38,8 +37,6 @@ export async function addMessage({
     text,
     pictures: [],
   };
-
-  console.log(message, 'message');
 
   return dbAdd('messages', message);
 }
@@ -62,4 +59,39 @@ export async function deleteMessageById(message_id: BigInt): Promise<Message> {
   }
 
   return message;
+}
+
+export async function getMessageList(
+  chat_id: number,
+  count?: number,
+): Promise<Message[]> {
+  const messageList = await dbList<Message[]>(
+    'messages',
+    { chat_id },
+    { count },
+  );
+
+  if (!messageList) {
+    throw new ErrorNotFound('messageList not found');
+  }
+
+  return messageList;
+}
+
+export async function getListPagination(
+  chat_id: number,
+  next_id?: number,
+  count?: number,
+): Promise<{
+  list: Message[];
+  next_from_id?: number | undefined;
+  hasMore: boolean;
+}> {
+  const messageList = await dbListPagination<Message[]>(
+    'messages',
+    { chat_id },
+    { count, start_id: next_id, sortBy: 'message_id' },
+  );
+
+  return messageList;
 }
