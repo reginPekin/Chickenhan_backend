@@ -39,3 +39,23 @@ export class ErrorWrongQueryParams extends ChickenhanError {
     this.desc = desc;
   }
 }
+
+export class ErrorUserNotFoundByToken extends ChickenhanError {
+  constructor() {
+    super(403, 'No user', "Didn't find user by token");
+
+    this.code = 403;
+    this.name = 'No user';
+    this.desc = "Didn't find user by token";
+  }
+}
+
+export class ErrorDb extends ChickenhanError {
+  constructor() {
+    super(502, 'DB died', 'Something wrong with db');
+
+    this.code = 502;
+    this.name = 'DB died';
+    this.desc = 'Something wrong with db';
+  }
+}

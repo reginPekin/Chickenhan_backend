@@ -1,8 +1,8 @@
 import { Server } from '../utils/server';
 
 import * as lib from '../lib/messages';
-import { getUserByToken } from '../lib/user';
-import { ErrorWrongBody } from '../utils/error';
+import { User } from '../lib/user';
+import { ErrorWrongBody, ErrorUserNotFoundByToken } from '../utils/error';
 
 export async function getMessageById(server: Server) {
   try {
@@ -61,7 +61,13 @@ export async function deleteMessageById(server: Server) {
   }
 }
 
-export async function addMessage(server: Server) {
+export async function addMessage(server: Server, user?: User) {
+  if (!user) {
+    server.respondError(new ErrorUserNotFoundByToken());
+
+    return;
+  }
+
   const body: {
     pictures?: string[];
     text?: string;
@@ -76,18 +82,17 @@ export async function addMessage(server: Server) {
   }
 
   try {
-    const author = await getUserByToken(server.headers.token);
     const chat_id = parseInt(server.pathParams.chat_id);
 
     const message = await lib.addMessage({
       chat_id,
-      author_id: author.id,
+      author_id: user.id,
 
       text: body.text,
       pictures: body.pictures,
     });
 
-    server.respond({ ...message, author });
+    server.respond({ ...message, user });
   } catch (error) {
     server.respondError(error);
   }

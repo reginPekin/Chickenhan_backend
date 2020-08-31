@@ -4,7 +4,7 @@ import { AuthFacebook, AuthGoogle, AuthLogin } from '../lib/auth';
 import { Message } from '../lib/messages';
 import { Chat } from '../lib/chats';
 
-import { ChickenhanError } from './error';
+import { ErrorDb } from './error';
 import { UsersChats } from '../lib/users_chats';
 
 type Options = { count: number; sortBy: string };
@@ -127,8 +127,7 @@ export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
 
   const result = await client.query(query);
 
-  if (result.rows.length <= 0)
-    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+  if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
 }
@@ -159,8 +158,7 @@ export async function dbUpdate<T>(
 
   const result = await client.query(query);
 
-  if (result.rows.length <= 0)
-    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+  if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
 }
@@ -181,8 +179,7 @@ export async function dbDelete<T>(
 
   const result = await client.query(query);
 
-  if (result.rows.length <= 0)
-    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+  if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
 }
@@ -213,8 +210,7 @@ export async function dbAddToArray<T>(
 
   const result = await client.query(query);
 
-  if (result.rows.length <= 0)
-    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+  if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
 }
@@ -245,8 +241,7 @@ export async function dbDeleteFromArray<T>(
 
   const result = await client.query(query);
 
-  if (result.rows.length <= 0)
-    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+  if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
 }
@@ -269,8 +264,7 @@ export async function dbCountArray<T>(
 
   const result = await client.query(query);
 
-  if (result.rows.length <= 0)
-    throw new ChickenhanError(502, 'DB died', 'Странная ошибка');
+  if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
 }
