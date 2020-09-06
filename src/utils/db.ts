@@ -64,11 +64,9 @@ export type DBRequestCountArray = ['users_chats', { chats: number }];
 
 export type DBRequestList = ['messages', Partial<Message>, Partial<Options>];
 
-export type DBRequestListPagination = [
-  'messages',
-  Partial<Message>,
-  OptionsPagination,
-];
+export type DBRequestListPagination =
+  | ['messages', Partial<Message>, OptionsPagination]
+  | ['chats', Partial<Chat>, OptionsPagination];
 
 const client = new Client({
   user: process.env.POSTGRES_USER,
