@@ -43,7 +43,25 @@ export async function getUserById(id: number): Promise<User> {
   return user;
 }
 
+export async function getUserWrapperById(id: number): Promise<UserWrap> {
+  const user = await dbGet<User>('users', { id });
+
+  if (!user) {
+    throw new ErrorNotFound('user error not found');
+  }
+
+  // send default avatar url
+  if (!user?.avatar) {
+    user.avatar = 'https://i.ytimg.com/vi/fpRJNptYa_o/maxresdefault.jpg';
+  }
+
+  const { token, ...wrappedUser } = user;
+
+  return wrappedUser;
+}
+
 export async function getUserByToken(token: string): Promise<User> {
+  // keshirovat'
   const user = await dbGet<User>('users', { token });
 
   if (!user) {
@@ -51,7 +69,7 @@ export async function getUserByToken(token: string): Promise<User> {
   }
 
   // send default avatar
-  if (user?.avatar) {
+  if (!user?.avatar) {
     user.avatar = 'https://i.ytimg.com/vi/fpRJNptYa_o/maxresdefault.jpg';
   }
 
@@ -73,4 +91,11 @@ export function addUserByLogin(login: string): Promise<User> {
 
 export function updateUser(id: number, queries: Partial<User>): Promise<User> {
   return dbUpdate('users', queries, { id });
+}
+
+export function updateUserByToken(
+  token: string,
+  queries: Partial<User>,
+): Promise<User> {
+  return dbUpdate('users', queries, { token });
 }
