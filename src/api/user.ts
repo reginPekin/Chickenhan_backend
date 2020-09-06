@@ -35,8 +35,9 @@ export async function updateMe(server: Server, user?: lib.User) {
 export async function getUser(server: Server) {
   try {
     const user = await lib.getUserById(parseInt(server.pathParams.id));
+    const { token, ...userWrapper } = user;
 
-    server.respond(user);
+    server.respond(userWrapper);
   } catch (error) {
     server.respondError(error);
   }
