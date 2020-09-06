@@ -1,7 +1,7 @@
 import { Server } from '../utils/server';
 
 import * as lib from '../lib/messages';
-import { User } from '../lib/user';
+import { User, getUserWrapperById, UserWrap } from '../lib/user';
 import { ErrorWrongBody, ErrorUserNotFoundByToken } from '../utils/error';
 
 export async function getMessageById(server: Server) {
@@ -20,13 +20,21 @@ export async function getMessageList(server: Server) {
   try {
     const messageList = await lib.getMessageList(
       parseInt(server.pathParams.chat_id),
-      4,
+      10,
     );
 
     server.respond(messageList);
   } catch (error) {
     server.respondError(error);
   }
+}
+
+async function getUserWithMessage(
+  message: lib.Message,
+): Promise<lib.MessageWrapper> {
+  const author: UserWrap = await getUserWrapperById(message.author_id);
+
+  return { ...message, author };
 }
 
 export async function getMessages(server: Server) {
@@ -36,6 +44,8 @@ export async function getMessages(server: Server) {
     );
   }
 
+  const messagePromise: Promise<lib.MessageWrapper>[] = [];
+
   try {
     const messageList = await lib.getListPagination(
       parseInt(server.pathParams.chat_id),
@@ -43,7 +53,21 @@ export async function getMessages(server: Server) {
       parseInt(server.params.count) || undefined,
     );
 
-    server.respond(messageList);
+    messageList.list.forEach((message: lib.Message) => {
+      const wrappedMessage: Promise<lib.MessageWrapper> = getUserWithMessage(
+        message,
+      );
+
+      messagePromise.push(wrappedMessage);
+    });
+
+    try {
+      const messages = await Promise.all(messagePromise);
+
+      server.respond({ ...messageList, list: messages });
+    } catch (error) {
+      server.respondError(error);
+    }
   } catch (error) {
     server.respondError(error);
   }
@@ -89,10 +113,10 @@ export async function addMessage(server: Server, user?: User) {
       author_id: user.id,
 
       text: body.text,
-      pictures: body.pictures,
+      // pictures: body.pictures,
     });
 
-    server.respond({ ...message, user });
+    server.respond({ ...message, author: user });
   } catch (error) {
     server.respondError(error);
   }
