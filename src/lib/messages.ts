@@ -1,5 +1,6 @@
 import { dbGet, dbAdd, dbDelete, dbList, dbListPagination } from '../utils/db';
 import { ErrorNotFound } from '../utils/error';
+import { User, UserWrap } from './user';
 
 export interface Message {
   chat_id: number;
@@ -10,6 +11,7 @@ export interface Message {
 
   text: string;
   pictures: BigInt[];
+  // pictures: number[];
 }
 
 export interface AddMessage {
@@ -17,7 +19,11 @@ export interface AddMessage {
   author_id: number;
 
   text?: string;
-  pictures?: string[];
+  pictures?: number[];
+}
+
+export interface MessageWrapper extends Message {
+  author: UserWrap;
 }
 
 export async function addMessage({
@@ -27,6 +33,7 @@ export async function addMessage({
   pictures = [],
 }: AddMessage): Promise<Message> {
   const date = new Date().toISOString();
+  // const date = new Date().getTime().toString();
 
   // кладу в бд с картинками с возвращением их id
 
@@ -37,7 +44,6 @@ export async function addMessage({
     text,
     pictures: [],
   };
-
   return dbAdd('messages', message);
 }
 
@@ -94,4 +100,14 @@ export async function getListPagination(
   );
 
   return messageList;
+}
+
+export async function getLastMessage(chat_id: number): Promise<Message> {
+  const messageList = await dbListPagination<Message[]>(
+    'messages',
+    { chat_id },
+    { count: 1, sortBy: 'message_id' },
+  );
+
+  return messageList.list[0];
 }
