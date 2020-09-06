@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as connectTimeout from 'connect-timeout';
 import * as path from 'path';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
@@ -31,18 +32,13 @@ import {
   getMessageList,
   getMessages,
 } from './api/messages';
-import { addChat, updateChatById, getChatById } from './api/chats';
-import {
-  getChats as getUserChats,
-  addChat as addUserChat,
-  removeChat as removeUserChat,
-  countUsersWithChat,
-  getFullChats,
-} from './api/users_chats';
+import * as chats from './api/chats';
+import * as userChats from './api/users_chats';
 
 app.use(cors());
 app.options('*', cors());
 
+app.use(connectTimeout('5s'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.raw());
@@ -72,15 +68,16 @@ get(`/messages/pagination/:chat_id`, getMessages);
 del(`/messages/:message_id`, deleteMessageById);
 post(`/messages/:chat_id`, addMessage);
 
-get('/chats/:chat_id', getChatById);
-patch('/chats/:chat_id', updateChatById);
-post('/chats/:opponent_id', addChat);
+get('/chats/:chat_id', chats.getChatById);
+get('/discover', chats.getChats);
+patch('/chats/:chat_id', chats.updateChatById);
+post('/chats/:opponent_id', chats.addChat);
 
-get('/user-chats/full', getFullChats);
-get('/user-chats', getUserChats);
-patch('/user-chats/add/:chat_id', addUserChat);
-patch('/user-chats/remove/:chat_id', removeUserChat);
-patch('/user-chats/count/:chat_id', countUsersWithChat);
+get('/user-chats/full', userChats.getFullChats);
+get('/user-chats', userChats.countUsersWithChat);
+patch('/user-chats/add/:chat_id', userChats.addChat);
+patch('/user-chats/remove/:chat_id', userChats.removeChat);
+patch('/user-chats/count/:chat_id', userChats.countUsersWithChat);
 
 initPostgres();
 
