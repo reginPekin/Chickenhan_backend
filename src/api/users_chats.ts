@@ -1,10 +1,26 @@
 import { Server } from '../utils/server';
 
 import { User } from '../lib/user';
-import { getChatById, Chat } from '../lib/chats';
+import { getChatById, ChatFullWrapper, ChatWrapper } from '../lib/chats';
+import { getLastMessage } from '../lib/messages';
 import * as lib from '../lib/users_chats';
 
 import { ErrorUserNotFoundByToken } from '../utils/error';
+
+export async function wrapChat(chat_id: number): Promise<ChatFullWrapper> {
+  const chat = await getChatById(chat_id);
+
+  const lastChatMessage = await getLastMessage(chat_id);
+
+  if (lastChatMessage && lastChatMessage.text && lastChatMessage.date)
+    return {
+      ...chat,
+      last_message: lastChatMessage.text,
+      last_dateMessage: lastChatMessage.date,
+    };
+
+  return chat;
+}
 
 export async function getFullChats(server: Server, user?: User) {
   if (!user) {
@@ -13,13 +29,13 @@ export async function getFullChats(server: Server, user?: User) {
     return;
   }
 
-  const chatsPromise: Promise<Chat>[] = [];
+  const chatsPromise: Promise<ChatWrapper>[] = [];
 
   try {
     const user_chats = await lib.getUserChats(user.id);
 
     user_chats.chats.forEach((chat_id: number) => {
-      const chat: Promise<Chat> = getChatById(chat_id);
+      const chat: Promise<ChatWrapper> = wrapChat(chat_id);
       chatsPromise.push(chat);
     });
 
