@@ -21,12 +21,13 @@ async function extractUser(token: string): Promise<User | undefined> {
 
 export function get(
   destination: string,
-  callback: (server: Server, user?: User) => any,
+  callback: (server: Server, user?: User | undefined) => any,
 ) {
   return app.get(API_PATH + destination, async (req, res) => {
     const server = parseToServer(req, res);
 
     const user = await extractUser(server.headers.token);
+
     callback(server, user);
   });
 }
