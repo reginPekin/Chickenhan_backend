@@ -66,10 +66,10 @@ export async function removeChat(
   return user_chats;
 }
 
-export async function countUsersWithChat(chat_id: number): Promise<UsersChats> {
-  const user_chats = await dbCountArray<UsersChats>('users_chats', {
+export async function countUsersWithChat(chat_id: number): Promise<number> {
+  const chatAmount = await dbCountArray<{ count: string }>('users_chats', {
     chats: chat_id,
   });
 
-  return user_chats;
+  return parseInt(chatAmount.count);
 }
