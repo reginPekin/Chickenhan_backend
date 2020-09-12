@@ -47,15 +47,19 @@ async function createTables() {
       type SMALLINT NOT NULL,
       avatar VARCHAR(255) NOT NULL,
 
-      name VARCHAR(256) NOT NULL,
-
-      opponent_id INTEGER
+      name VARCHAR(256) NOT NULL
     );`,
     `CREATE TABLE users_chats
     (
       user_id INTEGER PRIMARY KEY UNIQUE NOT NULL,
       chats INTEGER[]
     );`,
+    `CREATE TABLE pictures
+    (
+      picture_id BIGINT PRIMARY KEY UNIQUE NOT NULL,
+      type SMALLINT NOT NULL
+    );
+    `,
   ];
 
   TABLES.map(async table => {
