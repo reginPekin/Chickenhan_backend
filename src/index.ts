@@ -1,8 +1,9 @@
 import * as express from 'express';
-import * as connectTimeout from 'connect-timeout';
 import * as path from 'path';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
+import * as expressFormData from 'express-form-data';
+import * as os from 'os';
 
 import { app, get, post, patch, del } from './utils/express';
 
@@ -32,13 +33,23 @@ import {
   getMessageList,
   getMessages,
 } from './api/messages';
+import { addPicture, getPicture } from './api/pictures';
 import * as chats from './api/chats';
 import * as userChats from './api/users_chats';
 
 app.use(cors());
 app.options('*', cors());
 
-app.use(connectTimeout('5s'));
+const options = {
+  uploadDir: os.tmpdir(),
+  autoClean: true,
+};
+
+app.use(expressFormData.parse(options));
+app.use(expressFormData.format());
+app.use(expressFormData.stream());
+app.use(expressFormData.union());
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.raw());
@@ -71,20 +82,27 @@ post(`/messages/:chat_id`, addMessage);
 get('/chats/:chat_id', chats.getChatById);
 get('/discover', chats.getChats);
 patch('/chats/:chat_id', chats.updateChatById);
-post('/chats/:opponent_id', chats.addChat);
+post('/chats/:invited_user_id', chats.addChat);
 
 get('/user-chats/full', userChats.getFullChats);
-get('/user-chats', userChats.countUsersWithChat);
+get('/user-chats', userChats.getChats);
 patch('/user-chats/add/:chat_id', userChats.addChat);
 patch('/user-chats/remove/:chat_id', userChats.removeChat);
 patch('/user-chats/count/:chat_id', userChats.countUsersWithChat);
+patch('/user-chats/members/:chat_id', userChats.getDialogMembers);
+
+get('/pictures/:picture_id', getPicture);
+post('/pictures', addPicture);
 
 initPostgres();
 
 // Serving static
 app.use(express.static(path.join(__dirname, 'web_static')));
+
 app.get('*', (req, res) =>
   res.sendFile(path.join(__dirname, 'web_static/index.html')),
 );
+
+app.get('/health-check', (req, res) => res.sendStatus(200));
 
 app.listen(API_PORT, () => console.log('work'));
