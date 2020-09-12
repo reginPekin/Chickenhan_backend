@@ -1,6 +1,6 @@
 import { dbGet, dbAdd, dbDelete, dbList, dbListPagination } from '../utils/db';
 import { ErrorNotFound } from '../utils/error';
-import { User, UserWrap } from './user';
+import { UserWrap } from './user';
 
 export interface Message {
   chat_id: number;

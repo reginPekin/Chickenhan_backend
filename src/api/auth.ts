@@ -4,6 +4,7 @@ import * as lib from '../lib/auth';
 import { ErrorWrongBody } from '../utils/error';
 
 export async function authUserByGoogle(server: Server) {
+  console.log(server, 'server');
   const body: { google_token: string } = server.body as any;
 
   if (!body.hasOwnProperty('google_token')) {
@@ -20,6 +21,8 @@ export async function authUserByGoogle(server: Server) {
 }
 
 export async function authUserByFacebook(server: Server) {
+  console.log(server, 'server');
+
   const body: { facebook_token: string } = server.body as any;
 
   if (!body.hasOwnProperty('facebook_token')) {
@@ -39,6 +42,8 @@ export async function authUserByFacebook(server: Server) {
 }
 
 export async function authUserByLogin(server: Server) {
+  console.log(server, 'server');
+
   const body: { password: string; login: string } = server.body as any;
 
   // check for login and password
@@ -59,6 +64,8 @@ export async function authUserByLogin(server: Server) {
 }
 
 export async function signUpUserByLogin(server: Server) {
+  console.log(server, 'server');
+
   const body: { password: string; login: string } = server.body as any;
 
   if (!body.hasOwnProperty('password') || !body.hasOwnProperty('login')) {
@@ -78,6 +85,8 @@ export async function signUpUserByLogin(server: Server) {
 }
 
 export async function signUpUserByGoogle(server: Server) {
+  console.log(server, 'server');
+
   const body: { google_token: string; login: string } = server.body as any;
 
   if (!body.hasOwnProperty('google_token') && !body.hasOwnProperty('login')) {
@@ -98,6 +107,8 @@ export async function signUpUserByGoogle(server: Server) {
 }
 
 export async function signUpUserByFacebook(server: Server) {
+  console.log(server, 'server');
+
   const body: { facebook_token: string; login: string } = server.body as any;
 
   if (!body.hasOwnProperty('facebook_token') && !body.hasOwnProperty('login')) {

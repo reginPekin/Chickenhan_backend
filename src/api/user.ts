@@ -5,6 +5,8 @@ import { ErrorWrongBody, ErrorUserNotFoundByToken } from '../utils/error';
 import * as lib from '../lib/user';
 
 export async function getMe(server: Server, user?: lib.User) {
+  console.log(server, 'server');
+
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
 
@@ -19,6 +21,8 @@ export async function getMe(server: Server, user?: lib.User) {
 }
 
 export async function updateMe(server: Server, user?: lib.User) {
+  console.log(server, 'server');
+
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
 
@@ -26,13 +30,17 @@ export async function updateMe(server: Server, user?: lib.User) {
   }
 
   try {
-    server.respond(user);
+    const updatedUser = await lib.updateUser(user.id, server.body);
+
+    server.respond(updatedUser);
   } catch (error) {
     server.respondError(error);
   }
 }
 
 export async function getUser(server: Server) {
+  console.log(server, 'server');
+
   try {
     const user = await lib.getUserById(parseInt(server.pathParams.id));
     const { token, ...userWrapper } = user;
@@ -44,6 +52,8 @@ export async function getUser(server: Server) {
 }
 
 export async function addUserByLogin(server: Server) {
+  console.log(server, 'server');
+
   const body: { login: string } = server.body as any;
 
   if (!body.hasOwnProperty('login')) {
@@ -62,6 +72,8 @@ export async function addUserByLogin(server: Server) {
 }
 
 export async function updateUser(server: Server) {
+  console.log(server, 'server');
+
   try {
     const user = await lib.updateUser(
       parseInt(server.pathParams.id),

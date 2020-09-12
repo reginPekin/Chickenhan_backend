@@ -5,6 +5,8 @@ import { User, getUserWrapperById, UserWrap } from '../lib/user';
 import { ErrorWrongBody, ErrorUserNotFoundByToken } from '../utils/error';
 
 export async function getMessageById(server: Server) {
+  console.log(server, 'server');
+
   try {
     const message = await lib.getMessageById(
       BigInt(server.pathParams.message_id),
@@ -17,6 +19,8 @@ export async function getMessageById(server: Server) {
 }
 
 export async function getMessageList(server: Server) {
+  console.log(server, 'server');
+
   try {
     const messageList = await lib.getMessageList(
       parseInt(server.pathParams.chat_id),
@@ -38,6 +42,8 @@ async function getUserWithMessage(
 }
 
 export async function getMessages(server: Server) {
+  console.log(server, 'server');
+
   if (!server.pathParams.chat_id) {
     server.respondError(
       new ErrorWrongBody('There is ni needed chat_id inside path params'),
@@ -50,7 +56,7 @@ export async function getMessages(server: Server) {
     const messageList = await lib.getListPagination(
       parseInt(server.pathParams.chat_id),
       parseInt(server.params.next_id) || undefined,
-      parseInt(server.params.count) || undefined,
+      parseInt(server.params.count) || 100,
     );
 
     messageList.list.forEach((message: lib.Message) => {
@@ -74,6 +80,8 @@ export async function getMessages(server: Server) {
 }
 
 export async function deleteMessageById(server: Server) {
+  console.log(server, 'server');
+
   try {
     const message = await lib.deleteMessageById(
       BigInt(server.pathParams.message_id),
@@ -86,6 +94,8 @@ export async function deleteMessageById(server: Server) {
 }
 
 export async function addMessage(server: Server, user?: User) {
+  console.log(server, 'server');
+
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
 
