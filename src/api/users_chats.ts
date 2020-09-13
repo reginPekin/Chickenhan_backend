@@ -7,8 +7,11 @@ import * as lib from '../lib/users_chats';
 
 import { ErrorUserNotFoundByToken } from '../utils/error';
 
-export async function wrapChat(chat_id: number): Promise<ChatFullWrapper> {
-  const chat = await getChatById(chat_id);
+export async function wrapChat(
+  chat_id: number,
+  user_id: number,
+): Promise<ChatFullWrapper> {
+  const chat = await getChatById(chat_id, user_id);
 
   const lastChatMessage = await getLastMessage(chat_id);
 
@@ -23,6 +26,8 @@ export async function wrapChat(chat_id: number): Promise<ChatFullWrapper> {
 }
 
 export async function getFullChats(server: Server, user?: User) {
+  console.log(server, 'server');
+
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
 
@@ -35,7 +40,7 @@ export async function getFullChats(server: Server, user?: User) {
     const user_chats = await lib.getUserChats(user.id);
 
     user_chats.chats.forEach((chat_id: number) => {
-      const chat: Promise<ChatWrapper> = wrapChat(chat_id);
+      const chat: Promise<ChatWrapper> = wrapChat(chat_id, user.id);
       chatsPromise.push(chat);
     });
 
@@ -52,6 +57,8 @@ export async function getFullChats(server: Server, user?: User) {
 }
 
 export async function getChats(server: Server, user?: User) {
+  console.log(server, 'server');
+
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
 
@@ -68,6 +75,8 @@ export async function getChats(server: Server, user?: User) {
 }
 
 export async function addChat(server: Server, user?: User) {
+  console.log(server, 'server');
+
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
 
@@ -75,12 +84,6 @@ export async function addChat(server: Server, user?: User) {
   }
 
   try {
-    const user_chats = await lib.checkForUserChats(user.id);
-
-    if (!user_chats) {
-      await lib.addUserChats(user.id);
-    }
-
     const updated_user_chats = await lib.addChatToUser(
       user.id,
       parseInt(server.pathParams.chat_id),
@@ -93,6 +96,8 @@ export async function addChat(server: Server, user?: User) {
 }
 
 export async function removeChat(server: Server, user?: User) {
+  console.log(server, 'server');
+
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
 
@@ -112,12 +117,28 @@ export async function removeChat(server: Server, user?: User) {
 }
 
 export async function countUsersWithChat(server: Server) {
+  console.log(server, 'server');
+
   try {
     const user_count = await lib.countUsersWithChat(
       parseInt(server.pathParams.chat_id),
     );
 
     server.respond(user_count);
+  } catch (error) {
+    server.respondError(error);
+  }
+}
+
+export async function getDialogMembers(server: Server) {
+  console.log(server, 'server');
+
+  try {
+    const members = await lib.getDialogMembers(
+      parseInt(server.pathParams.chat_id),
+    );
+
+    server.respond(members);
   } catch (error) {
     server.respondError(error);
   }

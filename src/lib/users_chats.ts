@@ -4,6 +4,7 @@ import {
   dbAddToArray,
   dbDeleteFromArray,
   dbCountArray,
+  dbGetArraySpecialElements,
 } from '../utils/db';
 import { ErrorNotFound } from '../utils/error';
 
@@ -15,6 +16,8 @@ export interface UsersChats {
 
 export async function getUserChats(user_id: number): Promise<UsersChats> {
   const user_chats = await dbGet<UsersChats>('users_chats', { user_id });
+
+  console.log(user_chats);
 
   if (!user_chats) {
     throw new ErrorNotFound('chats not found');
@@ -44,13 +47,19 @@ export async function addChatToUser(
   user_id: number,
   chat_id: number,
 ): Promise<UsersChats> {
-  const user_chats = await dbAddToArray<UsersChats>(
+  const user_chats = await checkForUserChats(user_id);
+
+  if (!user_chats) {
+    await addUserChats(user_id);
+  }
+
+  const updated_user_chats = await dbAddToArray<UsersChats>(
     'users_chats',
     { chats: chat_id },
     { user_id },
   );
 
-  return user_chats;
+  return updated_user_chats;
 }
 
 export async function removeChat(
@@ -72,4 +81,18 @@ export async function countUsersWithChat(chat_id: number): Promise<number> {
   });
 
   return parseInt(chatAmount.count);
+}
+
+export async function getDialogMembers(
+  chat_id: number,
+): Promise<{ user_id: number }[]> {
+  const members = await dbGetArraySpecialElements<any>(
+    'users_chats',
+    'user_id',
+    {
+      chats: chat_id,
+    },
+  );
+
+  return members;
 }
