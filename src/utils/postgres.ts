@@ -60,6 +60,14 @@ async function createTables() {
       type SMALLINT NOT NULL
     );
     `,
+    `CREATE TABLE dialogs
+    (
+      user_id INTEGER,
+      opponent_id INTEGER,
+      chat_id INTEGER NOT NULL,
+      PRIMARY KEY(user_id, opponent_id)
+    );
+    `,
   ];
 
   TABLES.map(async table => {

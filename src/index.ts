@@ -33,6 +33,7 @@ import {
   getMessageList,
   getMessages,
 } from './api/messages';
+import { getDilog } from './api/dialogs';
 import { addPicture, getPicture } from './api/pictures';
 import * as chats from './api/chats';
 import * as userChats from './api/users_chats';
@@ -83,6 +84,8 @@ get('/chats/:chat_id', chats.getChatById);
 get('/discover', chats.getChats);
 patch('/chats/:chat_id', chats.updateChatById);
 post('/chats/:invited_user_id', chats.addChat);
+
+get('/dialogs/:opponent_id', getDilog);
 
 get('/user-chats/full', userChats.getFullChats);
 get('/user-chats', userChats.getChats);

@@ -1,11 +1,14 @@
 import { Client } from 'pg';
+
 import { UserManual, User } from '../lib/user';
 import { AuthFacebook, AuthGoogle, AuthLogin } from '../lib/auth';
 import { Message } from '../lib/messages';
 import { Chat } from '../lib/chats';
+import { UsersChats } from '../lib/users_chats';
+import { Picture } from '../lib/pictures';
+import { Dialogs } from '../lib/dialogs';
 
 import { ErrorDb } from './error';
-import { UsersChats } from '../lib/users_chats';
 
 type Options = { count: number; sortBy: string };
 
@@ -18,7 +21,9 @@ export type PostgresTable =
   | 'auth_login'
   | 'messages'
   | 'chats'
-  | 'users_chats';
+  | 'users_chats'
+  | 'pictures'
+  | 'dialogs';
 
 export type DBRequestUpdate =
   | ['users', Partial<User>, Partial<User>]
@@ -35,7 +40,9 @@ export type DBRequestGet =
   | ['auth_login', Partial<AuthLogin>]
   | ['messages', Partial<Message>]
   | ['chats', Partial<Chat>]
-  | ['users_chats', Partial<UsersChats>];
+  | ['users_chats', Partial<UsersChats>]
+  | ['pictures', Partial<Picture>]
+  | ['dialogs', Partial<Dialogs>];
 
 export type DBRequestAdd =
   | ['users', UserManual]
@@ -44,7 +51,9 @@ export type DBRequestAdd =
   | ['auth_login', AuthLogin]
   | ['messages', Omit<Message, 'message_id'>]
   | ['chats', Omit<Chat, 'chat_id'>]
-  | ['users_chats', UsersChats];
+  | ['users_chats', UsersChats]
+  | ['pictures', Picture]
+  | ['dialogs', Dialogs];
 
 export type DBRequestDelete =
   | ['users', Partial<User>]
@@ -61,6 +70,11 @@ export type DBRequestAddArray = [
 ];
 
 export type DBRequestCountArray = ['users_chats', { chats: number }];
+export type DBRequestGetArrayElements = [
+  'users_chats',
+  'user_id',
+  { chats: number },
+];
 
 export type DBRequestList = ['messages', Partial<Message>, Partial<Options>];
 
@@ -124,7 +138,6 @@ export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
   )}) VALUES (${bracketValues.join(', ')}) RETURNING *;`;
 
   const result = await client.query(query);
-
   if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
@@ -205,6 +218,7 @@ export async function dbAddToArray<T>(
            : `${param} = ${(params as any)[param]}`
        }`,
    )} RETURNING *;`;
+  console.log(query, 'query');
 
   const result = await client.query(query);
 
@@ -265,6 +279,29 @@ export async function dbCountArray<T>(
   if (result.rows.length <= 0) throw new ErrorDb();
 
   return result.rows[0];
+}
+
+export async function dbGetArraySpecialElements<T>(
+  ...[table, option, params]: DBRequestGetArrayElements
+): Promise<any> {
+  const paramsKey = Object.keys(params);
+
+  const query = `SELECT ${option} 
+    FROM ${table}
+    WHERE ${paramsKey.map(
+      (param, index) =>
+        `${index ? ' ' : ''}${
+          typeof (params as any)[param] === 'string'
+            ? `${param} @> '{"${(params as any)[param]}"}'`
+            : `${param} @> '{${(params as any)[param]}}'`
+        }`,
+    )};`;
+
+  const result = await client.query(query);
+
+  if (result.rows.length === 0) return [];
+
+  return result.rows;
 }
 
 export async function dbList<T extends Array<any>>(
