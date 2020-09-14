@@ -89,8 +89,18 @@ export function addUserByLogin(login: string): Promise<User> {
   return dbAdd('users', newUser);
 }
 
-export function updateUser(id: number, queries: Partial<User>): Promise<User> {
-  return dbUpdate('users', queries, { id });
+export async function updateUser(
+  id: number,
+  queries: Partial<User>,
+): Promise<UserWrap> {
+  const user = await dbUpdate<User>('users', queries, { id });
+  if (!user?.avatar) {
+    user.avatar = 'https://i.ytimg.com/vi/fpRJNptYa_o/maxresdefault.jpg';
+  }
+
+  const { token, ...wrappedUser } = user;
+
+  return wrappedUser;
 }
 
 export function updateUserByToken(
