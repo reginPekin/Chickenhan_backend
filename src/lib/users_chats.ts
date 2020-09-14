@@ -14,16 +14,24 @@ export interface UsersChats {
   chats: number[];
 }
 
+function onlyUnique(value: number, index: number, self: number[]): boolean {
+  return self.indexOf(value) === index;
+}
+
+function filterChats(user_chats: UsersChats) {
+  const filtered_chats = user_chats.chats.filter(onlyUnique);
+
+  return { ...user_chats, chats: filtered_chats };
+}
+
 export async function getUserChats(user_id: number): Promise<UsersChats> {
   const user_chats = await dbGet<UsersChats>('users_chats', { user_id });
-
-  console.log(user_chats);
 
   if (!user_chats) {
     throw new ErrorNotFound('chats not found');
   }
 
-  return user_chats;
+  return filterChats(user_chats);
 }
 
 export async function checkForUserChats(
@@ -59,7 +67,7 @@ export async function addChatToUser(
     { user_id },
   );
 
-  return updated_user_chats;
+  return filterChats(updated_user_chats);
 }
 
 export async function removeChat(
@@ -72,7 +80,7 @@ export async function removeChat(
     { user_id },
   );
 
-  return user_chats;
+  return filterChats(user_chats);
 }
 
 export async function countUsersWithChat(chat_id: number): Promise<number> {
