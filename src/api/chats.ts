@@ -2,47 +2,72 @@ import { Server } from '../utils/server';
 
 import * as lib from '../lib/chats';
 import { wrapChat } from './users_chats';
-import { ErrorWrongBody } from '../utils/error';
+import {
+  ErrorWrongBody,
+  ErrorUserNotFoundByToken,
+  ErrorNotFound,
+  ChickenhanError,
+} from '../utils/error';
 
-type StringChatType = 'dialog' | 'public' | 'private';
+import { User } from '../lib/user';
+import { getDialogMembers } from '../lib/users_chats';
 
-function setStringType(enumType: lib.ChatType): StringChatType {
-  switch (enumType) {
-    case lib.ChatType.private:
-      return 'private';
-    case lib.ChatType.dialog:
-      return 'dialog';
-    case lib.ChatType.public:
-      return 'public';
+export async function getChatById(server: Server, user?: User) {
+  console.log(server, 'server');
+
+  if (!user) {
+    server.respondError(new ErrorNotFound('not found user'));
+    return;
   }
-}
 
-export async function getChatById(server: Server) {
   try {
-    const chat = await lib.getChatById(parseInt(server.pathParams.chat_id));
+    const chat = await lib.getChatById(
+      parseInt(server.pathParams.chat_id),
+      user.id,
+    );
 
-    const stringType: StringChatType = setStringType(chat.type);
+    if (chat.type === 'dialog') {
+      const members = await getDialogMembers(chat.chat_id);
+      const foundUser = members.filter(member => member.user_id === user.id);
 
-    server.respond({ ...chat, type: stringType });
+      if (foundUser.length === 0)
+        server.respondError(
+          new ChickenhanError(
+            403,
+            'No access',
+            'This chat has nothing to do with you',
+          ),
+        );
+    }
+
+    server.respond(chat);
   } catch (error) {
     server.respondError(error);
   }
 }
 
-export async function addChat(server: Server) {
+export async function addChat(server: Server, user?: User) {
+  console.log(server, 'server');
+
+  if (!user) {
+    server.respondError(new ErrorUserNotFoundByToken());
+
+    return;
+  }
+
   const body: {
-    type: StringChatType;
+    type: lib.StringChatType;
     name: string;
     avatar?: string;
   } = server.body as any;
 
   if (
     !body.hasOwnProperty('type') ||
-    (!body.hasOwnProperty('name') && !server.pathParams.opponent_id)
+    (!body.hasOwnProperty('name') && !server.pathParams.invited_user_id)
   ) {
     server.respondError(
       new ErrorWrongBody(
-        'There is no needed chat type or chat name/opponent id',
+        'There is no needed chat type or chat name/invited user id',
       ),
     );
 
@@ -60,18 +85,17 @@ export async function addChat(server: Server) {
     }
   }
 
-  const opponent_id = parseInt(
-    body.type === 'dialog' ? server.pathParams.opponent_id : '0',
+  const invited_user_id = parseInt(
+    body.type === 'dialog' ? server.pathParams.invited_user_id : '0',
   );
-
   try {
     const chat = await lib.addChat({
+      user_id: user.id,
       type: setType(),
       name: body.name,
       avatar: body.avatar,
-      opponent_id,
+      invited_user_id,
     });
-
     const avatar =
       chat.avatar ||
       'https://ic.pics.livejournal.com/davydov_index/60378694/1830248/1830248_original.jpg';
@@ -82,22 +106,35 @@ export async function addChat(server: Server) {
   }
 }
 
-export async function updateChatById(server: Server) {
+export async function updateChatById(server: Server, user?: User) {
+  console.log(server, 'server');
+
+  if (!user) {
+    server.respondError(new ErrorNotFound('not found user'));
+    return;
+  }
+
   try {
     const chat = await lib.updateChatById(
       parseInt(server.pathParams.chat_id),
+      user.id,
       server.body,
     );
 
-    const stringType: StringChatType = setStringType(chat.type);
-
-    server.respond({ ...chat, type: stringType });
+    server.respond(chat);
   } catch (error) {
     server.respondError(error);
   }
 }
 
-export async function getChats(server: Server, second: any) {
+export async function getChats(server: Server, user?: User) {
+  console.log(server, 'server');
+
+  if (!user) {
+    server.respondError(new ErrorNotFound('not found user'));
+    return;
+  }
+
   const chatsPromise: Promise<lib.ChatWrapper>[] = [];
 
   try {
@@ -107,7 +144,10 @@ export async function getChats(server: Server, second: any) {
     );
 
     chatsList.list.forEach((chat: lib.Chat) => {
-      const fullChat: Promise<lib.ChatWrapper> = wrapChat(chat.chat_id);
+      const fullChat: Promise<lib.ChatWrapper> = wrapChat(
+        chat.chat_id,
+        user.id,
+      );
       chatsPromise.push(fullChat);
     });
 
