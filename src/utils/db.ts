@@ -52,7 +52,7 @@ export type DBRequestAdd =
   | ['messages', Omit<Message, 'message_id'>]
   | ['chats', Omit<Chat, 'chat_id'>]
   | ['users_chats', UsersChats]
-  | ['pictures', Picture]
+  | ['pictures', Partial<Picture>]
   | ['dialogs', Dialogs];
 
 export type DBRequestDelete =
@@ -136,6 +136,8 @@ export async function dbAdd<T>(...[table, data]: DBRequestAdd): Promise<T> {
   const query = `INSERT INTO ${table} (${fields.join(
     ', ',
   )}) VALUES (${bracketValues.join(', ')}) RETURNING *;`;
+
+  console.log(query, 'query');
 
   const result = await client.query(query);
   if (result.rows.length <= 0) throw new ErrorDb();

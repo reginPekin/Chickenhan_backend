@@ -3,6 +3,7 @@ import { Server } from '../utils/server';
 import { ErrorWrongBody, ErrorUserNotFoundByToken } from '../utils/error';
 
 import * as lib from '../lib/user';
+import { addPicture, PictureType, decodeB64 } from '../lib/pictures';
 
 export async function getMe(server: Server, user?: lib.User) {
   console.log(server, 'server');
@@ -33,6 +34,33 @@ export async function updateMe(server: Server, user?: lib.User) {
     const updatedUser = await lib.updateUser(user.id, server.body);
 
     server.respond(updatedUser);
+  } catch (error) {
+    server.respondError(error);
+  }
+}
+
+export async function updateAvatar(server: Server, user?: lib.User) {
+  const body: { picture: string } = server.body as any;
+
+  if (!body.picture) {
+    server.respondError(new ErrorWrongBody('There is no piture into body'));
+
+    return;
+  }
+
+  if (!user) {
+    server.respondError(new ErrorUserNotFoundByToken());
+
+    return;
+  }
+
+  console.log(server, 'this is server');
+
+  try {
+    const addedPicture = await addPicture(PictureType.UserAvatar);
+    decodeB64(body.picture, addedPicture.picture_id);
+
+    server.respond(addedPicture);
   } catch (error) {
     server.respondError(error);
   }

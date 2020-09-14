@@ -56,7 +56,7 @@ async function createTables() {
     );`,
     `CREATE TABLE pictures
     (
-      picture_id BIGINT PRIMARY KEY UNIQUE NOT NULL,
+      picture_id BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
       type SMALLINT NOT NULL
     );
     `,

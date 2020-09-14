@@ -16,6 +16,7 @@ import {
   getUser,
   updateUser,
   updateMe,
+  updateAvatar,
   addUserByLogin,
 } from './api/user';
 import {
@@ -60,9 +61,9 @@ get('/ping', server => server.respond('Pong'));
 
 // REST API
 get('/users/me', getMe);
-get('/users/me', updateMe);
 get('/users/:id', getUser);
 patch('/users/me', updateMe);
+patch('/users/avatar', updateAvatar);
 patch('/users/:id', updateUser);
 post('/users/login', addUserByLogin);
 
