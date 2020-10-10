@@ -78,9 +78,21 @@ export type DBRequestGetArrayElements = [
 
 export type DBRequestList = ['messages', Partial<Message>, Partial<Options>];
 
+export type DBRequestFullList =
+  | ['dialogs', Partial<Dialogs>, string[]]
+  | ['messages', Partial<Message>, string[]];
+
 export type DBRequestListPagination =
   | ['messages', Partial<Message>, OptionsPagination]
   | ['chats', Partial<Chat>, OptionsPagination];
+
+export type DBRequestGetFullByGroup = [
+  'messages',
+  Partial<Message>,
+  string[],
+  string,
+  string,
+];
 
 const client = new Client({
   user: process.env.POSTGRES_USER,
@@ -304,6 +316,63 @@ export async function dbGetArraySpecialElements<T>(
   if (result.rows.length === 0) return [];
 
   return result.rows;
+}
+
+export async function dbFullList<T extends Array<any>>(
+  ...[table, queries, params]: DBRequestFullList
+): Promise<T> {
+  const keys = Object.keys(queries);
+
+  const query = `SELECT ${params.map(
+    param => param,
+  )} FROM ${table} WHERE ${keys.map(
+    (key: any, index) =>
+      `${
+        typeof (queries as any)[key] === 'string'
+          ? `${key} = '${(queries as any)[key]}'`
+          : `${key} = ${(queries as any)[key]}`
+      }${keys.length - 1 !== index ? ' AND' : ''}`,
+  )};`;
+
+  console.log(query, 'query');
+
+  const result = await client.query(query);
+
+  return result.rows as T;
+}
+
+export async function dbGetFullByGroup<T extends Array<any>>(
+  ...[
+    table,
+    queries,
+    params,
+    groupedByParam,
+    groupedIntoArrayParam,
+  ]: DBRequestGetFullByGroup
+): Promise<T> {
+  const keys = Object.keys(queries);
+
+  const query = `
+    WITH CTE (${params.map(param => param)}) AS (
+      SELECT ${params.map(param => param)} FROM ${table} WHERE ${keys.map(
+    (key: any, index) =>
+      `${
+        typeof (queries as any)[key] === 'string'
+          ? `${key} = '${(queries as any)[key]}'`
+          : `${key} = ${(queries as any)[key]}`
+      }${keys.length - 1 !== index ? ' AND' : ''}`,
+  )})
+    SELECT ${groupedByParam}
+    ,array_agg(${groupedIntoArrayParam})
+    FROM CTE
+    GROUP BY ${groupedByParam};
+  `;
+
+  console.log(query, 'query');
+
+  const result = await client.query(query);
+
+  return result.rows as T;
 }
 
 export async function dbList<T extends Array<any>>(
