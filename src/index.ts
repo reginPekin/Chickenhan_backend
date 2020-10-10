@@ -12,6 +12,12 @@ import { API_PORT } from './config';
 import { initPostgres } from './utils/db';
 
 import {
+  createEventSource,
+  setOffline,
+  setOnline,
+  addMessage,
+} from './api/sse';
+import {
   getMe,
   getUser,
   updateUser,
@@ -28,7 +34,6 @@ import {
   signUpUserByFacebook,
 } from './api/auth';
 import {
-  addMessage,
   getMessageById,
   deleteMessageById,
   getMessageList,
@@ -57,9 +62,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.raw());
 app.use(bodyParser({ limit: '10mb' }));
 
-get('/ping', server => server.respond('Pong'));
+get('/ping', server => {
+  console.log('Pong');
+  server.respond('Pong');
+});
 
 // REST API
+app.get('/api/sse', createEventSource);
+patch('/sse', setOnline);
+del('/sse', setOffline);
+post('/sse/message/:chat_id', addMessage);
+
 get('/users/me', getMe);
 get('/users/:id', getUser);
 patch('/users/me', updateMe);
@@ -79,7 +92,6 @@ get(`/messages/:message_id`, getMessageById);
 get(`/messages/list/:chat_id`, getMessageList);
 get(`/messages/pagination/:chat_id`, getMessages);
 del(`/messages/:message_id`, deleteMessageById);
-post(`/messages/:chat_id`, addMessage);
 
 get('/chats/:chat_id', chats.getChatById);
 get('/discover', chats.getChats);
@@ -106,7 +118,6 @@ app.use(express.static(path.join(__dirname, 'web_static')));
 app.get('*', (req, res) =>
   res.sendFile(path.join(__dirname, 'web_static/index.html')),
 );
-
 app.get('/health-check', (req, res) => res.sendStatus(200));
 
 app.listen(API_PORT, () => console.log('work'));
