@@ -1,6 +1,6 @@
 import { dbGet, dbAdd, dbDelete, dbList, dbListPagination } from '../utils/db';
 import { ErrorNotFound } from '../utils/error';
-import { UserWrap } from './user';
+import { UserWrap, getUserWrapperById } from './user';
 
 export interface Message {
   chat_id: number;
@@ -22,29 +22,17 @@ export interface AddMessage {
   pictures?: number[];
 }
 
-export interface MessageWrapper extends Message {
+export interface MessageWrapper extends Omit<Message, 'author_id'> {
   author: UserWrap;
 }
 
-export async function addMessage({
-  chat_id,
-  author_id,
-  text = '',
-  pictures = [],
-}: AddMessage): Promise<Message> {
-  const date = new Date().toISOString();
-  // const date = new Date().getTime().toString();
+export async function getUserWithMessage(
+  message: Message,
+): Promise<MessageWrapper> {
+  const author: UserWrap = await getUserWrapperById(message.author_id);
+  const { author_id, ...wrappedMessage } = message;
 
-  // кладу в бд с картинками с возвращением их id
-
-  const message = {
-    chat_id,
-    author_id,
-    date,
-    text,
-    pictures: [],
-  };
-  return dbAdd('messages', message);
+  return { ...wrappedMessage, author };
 }
 
 export async function getMessageById(message_id: BigInt): Promise<Message> {
