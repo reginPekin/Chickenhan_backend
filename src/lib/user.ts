@@ -24,7 +24,7 @@ export interface UserWrap {
   readonly id: number;
 
   login: string;
-  online: boolean;
+  is_online: boolean;
   avatar: string;
 }
 
@@ -55,9 +55,9 @@ export async function getUserWrapperById(id: number): Promise<UserWrap> {
     user.avatar = 'https://i.ytimg.com/vi/fpRJNptYa_o/maxresdefault.jpg';
   }
 
-  const { token, ...wrappedUser } = user;
+  const { token, online, ...wrappedUser } = user;
 
-  return wrappedUser;
+  return { ...wrappedUser, is_online: online };
 }
 
 export async function getUserByToken(token: string): Promise<User> {
@@ -98,9 +98,9 @@ export async function updateUser(
     user.avatar = 'https://i.ytimg.com/vi/fpRJNptYa_o/maxresdefault.jpg';
   }
 
-  const { token, ...wrappedUser } = user;
+  const { token, online, ...wrappedUser } = user;
 
-  return wrappedUser;
+  return { ...wrappedUser, is_online: online };
 }
 
 export function updateUserByToken(
