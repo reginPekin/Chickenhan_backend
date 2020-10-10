@@ -11,22 +11,6 @@ import { User, updateUser, UserWrap } from './user';
 
 // export const sse = new SSE(['set_online', 'set_offline']);
 export const sse = new SSE();
-sse.on('error', (data: any) => {
-  console.warn('ERROR!', data);
-});
-sse.on('connection', (client: any) => {
-  client.res.setTimeout(0); // Disable timeout
-  var count = 0;
-  setTimeout(function () {
-    client.send('message #' + count++);
-  }, 1500);
-
-  setTimeout(function () {
-    client.send('message #' + count++);
-  }, 150000);
-});
-
-// export type Event = 'set_online' | 'set_offline';
 
 export async function setOnline(user: User): Promise<UserWrap> {
   const onlineUser = await updateUser(user.id, { online: true });

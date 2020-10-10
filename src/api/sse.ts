@@ -4,22 +4,10 @@ import { Server } from '../utils/server';
 import { User } from '../lib/user';
 import * as lib from '../lib/sse';
 
-import * as a from 'events';
-
 export function createEventSource(...args: any[]) {
   console.log('sse check');
-  // lib.sse.init(...args);
+  lib.sse.init(...args);
   console.log('sse inited');
-
-  const [_, res] = args;
-
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream', // <- Important headers
-    'Cache-Control': 'no-cache',
-  });
-  res.write('\n');
-
-  setInterval(() => res.write(`data: ${Math.random()}\n\n`), 200);
 }
 
 export async function setOnline(server: Server, user?: User) {
@@ -35,7 +23,6 @@ export async function setOnline(server: Server, user?: User) {
 }
 
 export async function setOffline(server: Server, user?: User) {
-  console.log('deleted', 'hiiiii');
   if (!user) {
     server.respondError(new ErrorUserNotFoundByToken());
     return;
