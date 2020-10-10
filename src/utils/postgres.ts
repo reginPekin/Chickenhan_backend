@@ -38,7 +38,7 @@ async function createTables() {
       author_id INTEGER NOT NULL,
       chat_id INTEGER NOT NULL,
       text TEXT,
-      date DATE,
+      date TIMESTAMPTZ,
       pictures BIGINT[]
     );`,
     `CREATE TABLE chats
