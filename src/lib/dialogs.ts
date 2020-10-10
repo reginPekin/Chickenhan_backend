@@ -1,6 +1,7 @@
 import { dbAdd, dbGet } from '../utils/db';
 
 import { ChatWrapper, addChat, getChatById, ChatType } from './chats';
+import { addDialog } from './sse';
 
 export interface Dialogs {
   user_id: number;
@@ -15,7 +16,7 @@ export async function getDialog(
   const dialog = await dbGet<Dialogs>('dialogs', { user_id, opponent_id });
 
   if (!dialog) {
-    const addedChat = await addChat({
+    const addedDialog = await addChat({
       user_id,
       type: ChatType.dialog,
       invited_user_id: opponent_id,
@@ -24,16 +25,17 @@ export async function getDialog(
     await dbAdd<Dialogs>('dialogs', {
       user_id,
       opponent_id,
-      chat_id: addedChat.chat_id,
+      chat_id: addedDialog.chat_id,
     });
 
     await dbAdd<Dialogs>('dialogs', {
       opponent_id: user_id,
       user_id: opponent_id,
-      chat_id: addedChat.chat_id,
+      chat_id: addedDialog.chat_id,
     });
 
-    return addedChat;
+    addDialog(addedDialog.chat_id, user_id, opponent_id);
+    return addedDialog;
   }
 
   const chat_id = dialog.chat_id;
