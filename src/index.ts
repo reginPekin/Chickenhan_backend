@@ -5,18 +5,15 @@ import * as cors from 'cors';
 import * as expressFormData from 'express-form-data';
 import * as os from 'os';
 
+import * as WebSocket from 'ws';
+import { websocket } from './api/websocket';
+
 import { app, get, post, patch, del } from './utils/express';
 
 import { API_PORT } from './config';
 
 import { initPostgres } from './utils/db';
 
-import {
-  createEventSource,
-  setOffline,
-  setOnline,
-  addMessage,
-} from './api/sse';
 import {
   getMe,
   getUser,
@@ -39,7 +36,7 @@ import {
   getMessageList,
   getMessages,
 } from './api/messages';
-import { getDilog } from './api/dialogs';
+import { getDialog } from './api/dialogs';
 import { addPicture, getPicture } from './api/pictures';
 import * as chats from './api/chats';
 import * as userChats from './api/users_chats';
@@ -67,11 +64,9 @@ get('/ping', server => {
   server.respond('Pong');
 });
 
-// REST API
-app.get('/api/sse', createEventSource);
-patch('/sse', setOnline);
-del('/sse', setOffline);
-post('/sse/message/:chat_id', addMessage);
+const wss = new WebSocket.Server({ port: 8010 });
+
+websocket.listenToWebsocket(wss);
 
 get('/users/me', getMe);
 get('/users/:id', getUser);
@@ -98,7 +93,7 @@ get('/discover', chats.getChats);
 patch('/chats/:chat_id', chats.updateChatById);
 post('/chats/:invited_user_id', chats.addChat);
 
-get('/dialogs/:opponent_id', getDilog);
+get('/dialogs/:opponent_id', getDialog);
 
 get('/user-chats/full', userChats.getFullChats);
 get('/user-chats', userChats.getChats);
@@ -120,4 +115,10 @@ app.get('*', (req, res) =>
 );
 app.get('/health-check', (req, res) => res.sendStatus(200));
 
-app.listen(API_PORT, () => console.log('work'));
+const server = app.listen(API_PORT, () => console.log('work'));
+
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, socket => {
+    wss.emit('connection', socket, request);
+  });
+});
