@@ -10,8 +10,8 @@ import {
   ChickenhanError,
 } from '../utils/error';
 
-export async function getDilog(server: Server, user?: User) {
-  console.log(server, 'Server');
+export async function getDialog(server: Server, user?: User) {
+  // console.log(server, 'Server');
 
   if (!user) {
     server.respondError(new ErrorNotFound('not found user'));
